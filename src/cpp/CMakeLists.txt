@@ -20,7 +20,9 @@ set(CMAKE_CUDA_ARCHITECTURES ${CUDA_ARCHITECTURES})
 nanobind_add_module(principled_brdf_functions
     principled_brdf.cpp
     cpu/principled_brdf_cpu.cpp
+    cpu/utils.cpp
     cuda/principled_brdf_cuda.cu
+    cuda/utils.cu
 )
 
 # CUDA compilation flags

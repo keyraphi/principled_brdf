@@ -10,22 +10,6 @@ __global__ void add_cuda_kernel(const float* a, const float* b, float* c, size_t
     }
 }
 
-// CUDA memory allocation
-extern "C" void* cuda_allocate(size_t size) {
-    void* ptr = nullptr;
-    cudaError_t err = cudaMalloc(&ptr, size);
-    if (err != cudaSuccess) {
-        return nullptr;
-    }
-    return ptr;
-}
-
-// CUDA memory deallocation
-extern "C" void cuda_free(void* ptr) {
-    if (ptr) {
-        cudaFree(ptr);
-    }
-}
 
 // CUDA dummy add implementation
 extern "C" void cuda_dummy_add(const float* a, const float* b, float* result, size_t n) {

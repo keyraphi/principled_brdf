@@ -1,6 +1,6 @@
 <meta charset="utf-8" emacsmode="-*- markdown -*-"><link rel="stylesheet" href="https://casual-effects.com/markdeep/latest/journal.css?">
-	**Derivative of Principled BRDF**
-
+Partial Derivatives of Principled BRDF
+================================================================================
 This is the derivation of the derivatives of the Principled BRDF function
 implemented in this repository.
 
@@ -18,8 +18,8 @@ as reference for the presented formulas.
 
 !!! Note
       This BRDF has been widely adopted in computer graphics. The Principled BSDF in
-      Blender uses this exact formulation, however there it is more than a BRDF. It also
-      provides true subsurface scattering and transparency, which is not part of this
+      Blender uses the same formulation, however it was extended to also include common scattering effects like true
+      subsurface scattering, transparency and emission, which are not part of this
       BRDF. The subsurface parameter only influences the shape of the diffuse BRDF lobe.
 
 User Parameters

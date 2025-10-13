@@ -2,5 +2,11 @@
 
 #include <cstddef>
 
-// CPU function declarations will go here
-// For now, we're implementing directly in the main file
+void principled_brdf_cpu_forward(const float *omega_i, const float *omega_o,
+                                  const float *P_b, const float *P_m,
+                                  const float *P_ss, const float *P_s,
+                                  const float *P_r, const float *P_st,
+                                  const float *P_ani, const float *P_sh,
+                                  const float *P_sht, const float *P_c,
+                                  const float *P_cg, const float *n,
+                                  float *result, size_t N);
