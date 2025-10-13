@@ -1,7 +1,8 @@
 # Find required packages
 find_package(CUDAToolkit REQUIRED)
+find_package(Python REQUIRED COMPONENTS Interpreter Development.Module)
 
-# Include nanobind as a subdirectory (assuming we have nanobind in the project or we use FetchContent)
+# Include nanobind
 include(FetchContent)
 FetchContent_Declare(
     nanobind
@@ -10,38 +11,58 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(nanobind)
 
-# We'll create two libraries: one for CPU and one for CUDA, but we'll combine them into one module.
-
-# CPU library
-add_library(disney_brdf_cpu STATIC
-    cpu/disney_brdf_cpu.cpp
-)
-
-target_include_directories(disney_brdf_cpu PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-
-# CUDA library
+# Enable CUDA
 enable_language(CUDA)
-add_library(disney_brdf_cuda STATIC
-    cuda/disney_brdf_cuda.cu
+set(CUDA_ARCHITECTURES 75 80 86 89)
+set(CMAKE_CUDA_ARCHITECTURES ${CUDA_ARCHITECTURES})
+
+# Single shared library for the Python extension
+nanobind_add_module(principled_brdf_functions
+    principled_brdf.cpp
+    cpu/principled_brdf_cpu.cpp
+    cuda/principled_brdf_cuda.cu
 )
 
-target_include_directories(disney_brdf_cuda PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(disney_brdf_cuda PRIVATE CUDA::cudart)
-
-# Now, the main module that uses both CPU and CUDA
-nanobind_add_module(disney_brdf_core
-    disney_brdf.cpp
+# CUDA compilation flags
+target_compile_options(principled_brdf_functions PRIVATE 
+    $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>
 )
 
-target_link_libraries(disney_brdf_core PRIVATE disney_brdf_cpu disney_brdf_cuda)
+# Link dependencies
+target_link_libraries(principled_brdf_functions PRIVATE CUDA::cudart)
 
-# We need to link against CUDA if we are using CUDA code
-target_link_libraries(disney_brdf_core PRIVATE CUDA::cudart)
+# C++ standard
+target_compile_features(principled_brdf_functions PRIVATE cxx_std_17)
 
-# We also need to set the C++ standard for the module
-target_compile_features(disney_brdf_core PRIVATE cxx_std_17)
-
-# If we are on a non-Windows platform, we need to set the rpath
+# RPATH for Unix
 if(UNIX)
-    set_target_properties(disney_brdf_core PROPERTIES INSTALL_RPATH "$ORIGIN")
+    set_target_properties(principled_brdf_functions PROPERTIES INSTALL_RPATH "$ORIGIN")
 endif()
+
+
+# Install the C++ extension to the current Python's site-packages
+# Prefer Python from the current environment
+if(DEFINED ENV{VIRTUAL_ENV})
+    message(STATUS "Using virtual environment: $ENV{VIRTUAL_ENV}")
+    set(Python_ROOT_DIR $ENV{VIRTUAL_ENV})
+endif()
+
+# Find Python - this should now find the venv Python
+find_package(Python REQUIRED COMPONENTS Interpreter Development.Module)
+
+message(STATUS "Python executable: ${Python_EXECUTABLE}")
+message(STATUS "Python version: ${Python_VERSION}")
+message(STATUS "Python include: ${Python_INCLUDE_DIRS}")
+message(STATUS "Python library: ${Python_LIBRARIES}")
+
+# Get Python package installation directory
+execute_process(
+    COMMAND ${Python_EXECUTABLE} -c "import site; print(site.getsitepackages()[0])"
+    OUTPUT_VARIABLE PYTHON_SITE_PACKAGES
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+message(STATUS "Python site-packages: ${PYTHON_SITE_PACKAGES}")
+
+install(TARGETS principled_brdf_functions
+    LIBRARY DESTINATION ${Python_SITEARCH}
+)

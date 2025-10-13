@@ -9,9 +9,9 @@ requires = [
 build-backend = "scikit_build_core.build"
 
 [project]
-name = "disney-brdf"
+name = "principled_brdf_torch"
 version = "0.1.0"
-description = "Disney BRDF with derivatives as a custom PyTorch operation"
+description = "Principled BRDF with derivatives in C++ and CUDA with python bindings using DLPack tensors, which can be adapted for any ML-Framework supporting DLPack. The pytorch Autograd function is given for reference."
 authors = [
     { name = "Raphael Braun", email = "keyraphi@gmail.com" }
 ]
@@ -19,7 +19,6 @@ readme = "README.md"
 requires-python = ">=3.8"
 dependencies = [
     "torch>=2.0.0",
-    "numpy"
 ]
 
 [project.optional-dependencies]
