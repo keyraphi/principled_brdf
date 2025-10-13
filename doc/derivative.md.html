@@ -1,12 +1,12 @@
 <meta charset="utf-8" emacsmode="-*- markdown -*-"><link rel="stylesheet" href="https://casual-effects.com/markdeep/latest/journal.css?">
-	**Derivative of Disne BRDF**
+	**Derivative of Principled BRDF**
 
-This is the derivation of the derivatives of the Disney BRDF function
-implemented in this tensorflow operation.
+This is the derivation of the derivatives of the Principled BRDF function
+implemented in this repository.
 
-Disne BRDF
+Principled BRDF
 ================================================================================
-The Disne BRDF was published in [#Burley2012] and was designed to be a intuitive
+The Principled BRDF was published in [#Burley2012] and was designed to be an easy
 to use ubershader, which allows artists to represent most commonly occouring
 reflectance properties of real world objects
 with just one shader. It consists of multiple physically based BRDF models,
@@ -16,9 +16,15 @@ We use the code from the
 [The Disney BRDF Explorer](https://github.com/wdas/brdf/blob/master/src/brdfs/disney.brdf)
 as reference for the presented formulas.
 
+!!! Note
+      This BRDF has been widely adopted in computer graphics. The Principled BSDF in
+      Blender uses this exact formulation, however there it is more than a BRDF. It also
+      provides true subsurface scattering and transparency, which is not part of this
+      BRDF. The subsurface parameter only influences the shape of the diffuse BRDF lobe.
+
 User Parameters
 --------------------------------------------------------------------------------
-The Disney BRDF has 11 parameters, which are either 3D vectors or scalar values
+The Principled BRDF has 11 parameters, which are either 3D vectors or scalar values
 all in the value range [0, 1]. Vectors are marked by using a bold font.
 
 - $\mathbf{P_b}$: baseColor - 3D vector, default: [0.8, 0.8, 0.8]
@@ -33,18 +39,18 @@ all in the value range [0, 1]. Vectors are marked by using a bold font.
 - $P_{c}$: clearcoat - Scalar, default: 0
 - $P_{cg}$: clearcoatGloss - Scalar, default 1
 
-Generally spoken the surface normal $n$ is not a BRDF parameter, as it encodes
+Strictly speaking the surface normal $n$ is not a BRDF parameter, as it encodes
 macroscopic shape information instead of microscopic material information like
-all previously shown parameters. However the normal maps still provide
-important shading information which we would like to optimize for in our deep
-learning models. We therefore also need to compute the derivative of the BRDF
-according to the surface normals:
+all previously shown parameters. However the normal still provides
+important shading information which we would like to optimize for in our ML-models.
+We therefore also need to compute the derivative of the BRDF
+with respect to the surface normals:
 - $\mathbf{n}$: normal - 3D vector, default: [0, 0, 1]
 
 BRDF arguments
 --------------------------------------------------------------------------------
-A BRDF is a 4D-function that given the direction $\mathbf{\omega_i}$ of the incident light and the
-direction $\mathbf{\omega_o}$ of the observer computes the ratio of light
+A BRDF is a 4D-function that, given the direction $\mathbf{\omega_i}$ of the incoming light and the
+direction $\mathbf{\omega_o}$ to the observer, computes the ratio of light
 reflected on the surface from $\mathbf{\omega_i}$ to $\mathbf{\omega_o}$.
 
 For convenience we will refer to: 
@@ -58,7 +64,7 @@ listed here:
 
 BRDF Function
 --------------------------------------------------------------------------------
-The entire BRDF function is to complex to be written down in all detail in just
+The entire BRDF function is too complex to be written down in all detail in just
 one line. We therefore substitute out many more complex components and explain
 those parts later. For each of those components we specify its dependencies on
 the parameters from the User Parameters section:
