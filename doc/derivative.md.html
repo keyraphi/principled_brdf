@@ -364,7 +364,7 @@ The derivative computation is split up into manageable and reapearing parts,
 which have to be assembled to get the derivative of the full BRDF.
 
 ## $\frac{\partial}{\partial\mathbf{P_b}}BRDF$
-\begin{align*}
+\begin{align}
 \frac{\partial \text{BRDF}}{\partial\mathbf{P_b}} &= 
 \frac{\partial}{\partial\mathbf{P_b}}\left(\frac{1}{\pi} \text{mix}(F_d, ss,
 P_{ss}) \cdot \mathbf{C_{dlin}} +
@@ -372,10 +372,10 @@ P_{ss}) \cdot \mathbf{C_{dlin}} +
 & + \frac{\partial}{\partial\mathbf{P_b}}G_s\cdot \mathbf{F_s} \cdot D_s \\
 & + \frac{\partial}{\partial\mathbf{P_b}}0.25\cdot P_c\cdot G_r \cdot F_r \cdot
 D_r 
-\end{align*}
+\end{align}
 
 Part1:
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial\mathbf{P_b}}\left(\frac{1}{\pi} \text{mix}(F_d, ss,
 P_{ss}) \cdot \mathbf{C_{dlin}} +
 \mathbf{F_{sheen}}\right) \cdot (1 - P_{m}) &=  
@@ -388,59 +388,59 @@ P_{ss}) \cdot \mathbf{C_{dlin}} +
 &=  (1 - P_{m})\cdot\frac{1}{\pi} \text{mix}(F_d, ss, P_{ss}) \cdot
 \frac{\partial}{\partial\mathbf{P_b}}\left(\mathbf{C_{dlin}}\right) +
 \frac{\partial}{\partial\mathbf{P_b}}\left(\mathbf{F_{sheen}}\right) \\ 
-\end{align*}
+\end{align}
 
 Part2:
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial\mathbf{P_b}}G_s\cdot \mathbf{F_s} \cdot D_s &=
  D_s\cdot G_s\cdot \frac{\partial}{\partial\mathbf{P_b}}\mathbf{F_s}  \\
-\end{align*}
+\end{align}
 
 Part3:
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial\mathbf{P_b}} 0.25\cdot P_c\cdot G_r \cdot F_r \cdot D_r
 &= 0
-\end{align*}
+\end{align}
 
 
 ### $\frac{\partial}{\partial\mathbf{P_b}}\mathbf{C_{dlin}}$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial\mathbf{P_b}} \mathbf{C_{dlin}}
 &=\frac{\partial}{\partial\mathbf{P_b}} \mathbf{P_b}^{2.2}\\
 &= 2.2\cdot \text{diag}(\mathbf{P_b}^{1.2})
-\end{align*}
+\end{align}
 
 ### $\frac{\partial}{\partial\mathbf{P_b}} \mathbf{F_{sheen}}$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial\mathbf{P_b}} \mathbf{F_{sheen}}
 &= \frac{\partial}{\partial\mathbf{P_b}} \left(F_H \cdot P_{sh} \cdot
 \mathbf{C_{sheen}}\right)\\
 &= F_H \cdot P_{sh} \cdot
 \frac{\partial}{\partial\mathbf{P_b}} \mathbf{C_{sheen}}\\
-\end{align*}
+\end{align}
 
 ### $\frac{\partial}{\partial\mathbf{P_b}} \mathbf{C_{sheen}}$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial\mathbf{P_b}} \mathbf{C_{sheen}}&=
 \frac{\partial}{\partial\mathbf{P_b}} \left(mix(\mathbf{1},
 \mathbf{C_{tint}}, P_{sht})\right)\\
 &=\frac{\partial}{\partial\mathbf{P_b}}\left(\mathbf{1} +
 P_{sht}(\mathbf{C_{tint}} - \mathbf{1})\right)\\ 
 &=P_{sht}\cdot\frac{\partial}{\partial\mathbf{P_b}}\mathbf{C_{tint}} \\
-\end{align*}
+\end{align}
 
 ### $\frac{\partial}{\partial\mathbf{P_b}}\mathbf{C_{tint}}$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial\mathbf{P_b}}\mathbf{C_{tint}}
 &=P_{sht}\cdot\begin{cases}
 \frac{\partial}{\partial\mathbf{P_b}}\left(\frac{\mathbf{C_{dlin}}}{C_{dlum}}\right)
 & \text{if} & C_{dlum}>0\\
 0 & \text{else}
 \end{cases}\\
-\end{align*}
+\end{align}
 
 ### $\frac{\partial}{\partial\mathbf{P_b}}\frac{\mathbf{C_{dlin}}}{C_{dlum}}$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial\mathbf{P_b}}\left(\frac{\mathbf{C_{dlin}}}{C_{dlum}}\right)
 &=
 \frac{\frac{\partial}{\partial\mathbf{P_b}}\left(\mathbf{C_{dlin}}\right) \cdot
@@ -453,10 +453,10 @@ C_{dlum} -
 \frac{2.2 \cdot \text{diag}(\mathbf{P_{b}}^{1.2}) \cdot C_{dlum} - 
 \mathbf{C_{dlin}} \frac{\partial}{\partial\mathbf{P_b}}C_{dlum}}
 {\left(C_{dlum}\right)^{2}}\\
-\end{align*}
+\end{align}
 
 ### $\frac{\partial}{\partial\mathbf{P_b}}C_{dlum}$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial\mathbf{P_b}}C_{dlum}
 &= 
 \frac{\partial}{\partial\mathbf{P_b}}\left(\mathbf{C_{dlin}} \cdot
@@ -468,13 +468,13 @@ C_{dlum} -
 \left[\mathbf{P_b}^{2.2}\right]\\
 &= 
 2.2\cdot\left[\begin{pmatrix}0.3\\0.6\\0.1\end{pmatrix}\odot\mathbf{P_b}^{1.2}\right]
-\end{align*}
+\end{align}
 !!! Note
     $\odot$ represents the Hadamard product.
 
 
 ### $\frac{\partial}{\partial\mathbf{P_b}}\mathbf{F_{s}}$
-\begin{align*}
+\begin{align}
  \frac{\partial}{\partial\mathbf{P_b}}\mathbf{F_s} &=
  \frac{\partial}{\partial\mathbf{P_b}}\text{mix}(\mathbf{C_{spec0}}, \mathbf{1},
  F_H)\\
@@ -483,10 +483,10 @@ C_{dlum} -
  &= \frac{\partial}{\partial\mathbf{P_b}}\mathbf{C_{spec0}} -
 F_H \cdot \frac{\partial}{\partial\mathbf{P_b}} \mathbf{C_{spec0}}\\
  &= (1 - F_H) \cdot \frac{\partial}{\partial\mathbf{P_b}}\mathbf{C_{spec0}}
- \end{align*}
+ \end{align}
 
 ### $\frac{\partial}{\partial\mathbf{P_b}}\mathbf{C_{spec0}}$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial\mathbf{P_b}}\mathbf{C_{spec0}} &= \text{mix}(P_s \cdot
 0.08 \cdot \text{mix}(\mathbf{1}, \mathbf{C_{tint}}, P_{st}), \mathbf{C_{dlin}},
 P_m)\\
@@ -505,11 +505,11 @@ P_s\cdot 0.08 \cdot P_{st} \cdot \frac{\partial}{\partial\mathbf{P_b}}\mathbf{C_
 + P_M \cdot \frac{\partial}{\partial\mathbf{P_b}} \mathbf{C_{dlin}}
 - P_M\cdot P_s\cdot 0.08 \cdot P_{st}
 \cdot \frac{\partial}{\partial\mathbf{P_b}} \mathbf{C_{tint}}
-\end{align*}
+\end{align}
 
 
 ## $\frac{\partial}{\partial P_m}BRDF$
-\begin{align*}
+\begin{align}
 \frac{\partial \text{BRDF}}{\partial P_m} &= 
 \frac{\partial}{\partial P_m}\left(\frac{1}{\pi} \text{mix}(F_d, ss,
 P_{ss}) \cdot \mathbf{C_{dlin}} +
@@ -517,10 +517,10 @@ P_{ss}) \cdot \mathbf{C_{dlin}} +
 & + \frac{\partial}{\partial P_m}G_s\cdot \mathbf{F_s} \cdot D_s \\
 & + \frac{\partial}{\partial P_m}0.25\cdot P_c\cdot G_r \cdot F_r \cdot
 D_r 
-\end{align*}
+\end{align}
 
 Part1:
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_m}\left(\frac{1}{\pi} \text{mix}(F_d, ss,
 P_{ss}) \cdot \mathbf{C_{dlin}} +
 \mathbf{F_{sheen}}\right) \cdot (1 - P_{m})
@@ -532,22 +532,22 @@ P_{ss}) \cdot \mathbf{C_{dlin}} +
 - \left(\frac{1}{\pi} \text{mix}(F_d, ss,
 P_{ss}) \cdot \mathbf{C_{dlin}} +
 \mathbf{F_{sheen}}\right)
-\end{align*}
+\end{align}
 
 Part2:
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_m}G_s\cdot \mathbf{F_s} \cdot D_s &=
 G_s\cdot  D_s\cdot \frac{\partial}{\partial P_m}\mathbf{F_s} 
-\end{align*}
+\end{align}
 
 Part3:
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_m} 0.25\cdot P_c\cdot G_r \cdot F_r \cdot D_r
 &= 0
-\end{align*}
+\end{align}
 
 ### $\frac{\partial}{\partial P_m}\mathbf{F_s}$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_m} \mathbf{F_s}
 &= \frac{\partial}{\partial P_m}  \text{mix}(\mathbf{C_{spec0}}, \mathbf{1},
 F_H)\\
@@ -555,10 +555,10 @@ F_H)\\
 \mathbf{C_{spec0}})\right)\\
 &= \frac{\partial}{\partial P_m} \mathbf{C_{spec0}} - F_H \cdot \frac{\partial}{\partial
 P_m}\mathbf{C_{spec0}}\\
-&= (1- F_H)\cdot\frac{\partial}{\partial P_m} \mathbf{C_{spec0}} \end{align*}
+&= (1- F_H)\cdot\frac{\partial}{\partial P_m} \mathbf{C_{spec0}} \end{align}
 
 ### $\frac{\partial}{\partial P_m} \mathbf{C_{spec0}}$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_m} \mathbf{C_{spec0}} &=
 \frac{\partial}{\partial P_m}\text{mix}(P_s \cdot 0.08 \cdot \text{mix}(\mathbf{1},
 \mathbf{C_{tint}}, P_{st}), \mathbf{C_{dlin}}, P_m)\\
@@ -567,12 +567,12 @@ P_m \cdot (\mathbf{C_{dlin}} - P_s \cdot 0.08 \cdot (\mathbf{1} +
 P_{st}(\mathbf{C_{tint}} - \mathbf{1})))\right)\\
 &= \mathbf{C_{dlin}} - P_s \cdot 0.08 \cdot (\mathbf{1} +
 P_{st}(\mathbf{C_{tint}} - \mathbf{1}))
-\end{align*}
+\end{align}
 
 
 ## $\frac{\partial}{\partial P_{ss}} BRDF$
 
-\begin{align*}
+\begin{align}
 \frac{\partial \text{BRDF}}{\partial P_{ss}} &= 
 \frac{\partial}{\partial P_{ss}}\left(\frac{1}{\pi} \text{mix}(F_d, ss,
 P_{ss}) \cdot \mathbf{C_{dlin}} +
@@ -594,12 +594,12 @@ P_{ss}) \\
 \frac{\partial}{\partial P_{ss}} \left(F_d + P_{ss} (ss - F_d)\right) \\
 &=
 (1 - P_{m}) \cdot\frac{1}{\pi}  \cdot \mathbf{C_{dlin}}\cdot(ss - F_d)
-\end{align*}
+\end{align}
 
 
 ## $\frac{\partial}{\partial P_s} BRDF$
 
-\begin{align*}
+\begin{align}
 \frac{\partial \text{BRDF}}{\partial P_s} &= 
 \frac{\partial}{\partial P_s}\left(\frac{1}{\pi} \text{mix}(F_d, ss,
 P_{ss}) \cdot \mathbf{C_{dlin}} +
@@ -611,9 +611,9 @@ D_r \\
 \frac{\partial}{\partial P_s}G_s\cdot \mathbf{F_s} \cdot D_s \\
 &=
 G_s \cdot D_s \cdot \frac{\partial}{\partial P_s}\mathbf{F_s}\\
-\end{align*}
+\end{align}
 
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_s}\mathbf{F_s} &= 
 \frac{\partial}{\partial P_s}\text{mix}(\mathbf{C_{spec0}}, \mathbf{1}, F_H)\\
 &= 
@@ -624,10 +624,10 @@ G_s \cdot D_s \cdot \frac{\partial}{\partial P_s}\mathbf{F_s}\\
 F_H \frac{\partial}{\partial P_s}\mathbf{C_{spec0}} \\
 &= (1 - F_H) 
 \frac{\partial}{\partial P_s} \mathbf{C_{spec0}} 
-\end{align*}
+\end{align}
 
 ### $\frac{\partial}{\partial P_s} \mathbf{C_{spec0}}$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_s}\mathbf{C_{spec0}} &= 
 \frac{\partial}{\partial P_s}
 \text{mix}(P_s \cdot 0.08 \cdot \text{mix}(\mathbf{1},
@@ -639,12 +639,12 @@ P_s \cdot 0.08 \cdot \text{mix}(\mathbf{1}, \mathbf{C_{tint}}, P_{st})
 P_s \cdot 0.08 \cdot \text{mix}(\mathbf{1}, \mathbf{C_{tint}}, P_{st} )
 \right)\\
 &=0.08 \cdot \text{mix}(\mathbf{1}, \mathbf{C_{tint}}, P_{st}) \cdot (1 - P_m)
-\end{align*}
+\end{align}
 
 
 ## $\frac{\partial}{\partial P_r} BRDF$
 
-\begin{align*}
+\begin{align}
 \frac{\partial \text{BRDF}}{\partial P_r} &= 
 \frac{\partial}{\partial P_r}\left(\frac{1}{\pi} \text{mix}(F_d, ss,
 P_{ss}) \cdot \mathbf{C_{dlin}} +
@@ -652,10 +652,10 @@ P_{ss}) \cdot \mathbf{C_{dlin}} +
 & + \frac{\partial}{\partial P_r}G_s\cdot \mathbf{F_s} \cdot D_s \\
 & + \frac{\partial}{\partial P_r}0.25\cdot P_c\cdot G_r \cdot F_r \cdot
 D_r \\
-\end{align*}
+\end{align}
 
 - Part 1:
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_r}\left(\frac{1}{\pi} \text{mix}(F_d, ss,
 P_{ss}) \cdot \mathbf{C_{dlin}} +
 \mathbf{F_{sheen}}\right) \cdot (1 - P_{m}) &=
@@ -677,25 +677,25 @@ F_d + P_{ss}(ss - F_d)\right)\\
 \frac{1}{\pi}  \cdot \mathbf{C_{dlin}} \cdot 
 \left[(1 - P_{ss})\frac{\partial}{\partial P_r} F_d +
 P_{ss}\frac{\partial}{\partial P_r} ss \right]
-\end{align*}
+\end{align}
 
 - Part 2:
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_r}G_s\cdot \mathbf{F_s} \cdot D_s &=
 \mathbf{F_s} \cdot \frac{\partial}{\partial P_r}(G_s\cdot D_s)\\
 &= 
 \mathbf{F_s} \cdot \left(\frac{\partial}{\partial P_r}G_s\cdot D_s + G_s \cdot
 \frac{\partial}{\partial P_r} D_s\right)\\
-\end{align*}
+\end{align}
 
 - Part 3:
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_r}0.25\cdot P_c\cdot G_r \cdot F_r \cdot
 D_r &= 0
-\end{align*}
+\end{align}
 
 ### $\frac{\partial}{\partial P_r} F_d$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_r}F_d &=  \frac{\partial}{\partial P_r}
 \left[\text{mix}(1, F_{d90}, F_L) \cdot \text{mix}(1, F_{d90}, F_V)\right]\\
 &=
@@ -723,21 +723,21 @@ F_V \right]\\
 &=
 \frac{\partial}{\partial P_r} F_{d90} \cdot\left[
 2\cdot(F_{d90} - 1)\cdot F_L \cdot F_V + F_L + F_V \right]
-\end{align*}
+\end{align}
 
 
 
 ### $\frac{\partial}{\partial P_r} F_{d90}$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_r} F_{d90} &=
 \frac{\partial}{\partial P_r} \left(0.5 + 2\cdot(\mathbf{L}\cdot \mathbf{H})^{2} \cdot P_r \right)\\
 &= 2\cdot(\mathbf{L}\cdot \mathbf{H})^{2}
-\end{align*}
+\end{align}
 
 
 
 ### $\frac{\partial}{\partial P_r} ss$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_r} ss &=
 \frac{\partial}{\partial P_r}\left[
 1.25\left(F_{ss} \left(\frac{1}{\max(10^{-6}, \mathbf{n}\cdot \mathbf{L}) +
@@ -748,12 +748,12 @@ F_V \right]\\
 \max(10^{-6}, \mathbf{n}\cdot \mathbf{V})} - 0.5\right)
 \frac{\partial}{\partial P_r}
 F_{ss}  \\
-\end{align*}
+\end{align}
 
 
 
 ### $\frac{\partial}{\partial P_r} F_{ss}$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_r} F_{ss} &= 
 \frac{\partial}{\partial P_r} \left[\text{mix}(1, F_{ss90}, F_L) \cdot \text{mix}(1,
 F_{ss90}, F_V)\right]\\
@@ -775,20 +775,20 @@ F_L\cdot \left(1 + F_V(F_{ss90} - 1)\right)\cdot \frac{\partial}{\partial P_r} F
 \frac{\partial}{\partial P_r} F_{ss90} \cdot \left[
 2 \cdot (F_{ss90}-1) \cdot F_L\cdot F_V + F_L + F_V
 \right]
-\end{align*}
+\end{align}
 
 ### $\frac{\partial}{\partial P_r} F_{ss90}$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_r} F_{ss90} &=
 \frac{\partial}{\partial P_r} (\mathbf{L}\cdot \mathbf{H})^{2} \cdot P_r\\
 &=(\mathbf{L}\cdot \mathbf{H})^{2} 
-\end{align*}
+\end{align}
 
 
 
 
 ### $\frac{\partial}{\partial P_r} D_s$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_r} D_s &= 
 \frac{\partial}{\partial P_r}
 \frac{1}{\pi \cdot a_x \cdot a_y \cdot \left(\left(\frac{\mathbf{H}\cdot
@@ -806,12 +806,12 @@ F_L\cdot \left(1 + F_V(F_{ss90} - 1)\right)\cdot \frac{\partial}{\partial P_r} F
 \mathbf{X}}{a_x}\right)^{2} + \left(\frac{\mathbf{H}\cdot
 \mathbf{Y}}{a_y}\right)^{2} + (\mathbf{n}\cdot \mathbf{H})^{2}\right)^{2}\right)^{2}
 }\\
-\end{align*}
+\end{align}
 
 
 
 ### $\frac{\partial}{\partial P_r} \left[\pi \cdot a_x \cdot a_y \cdot \left(\left(\frac{\mathbf{H}\cdot\mathbf{X}}{a_x}\right)^{2} + \left(\frac{\mathbf{H}\cdot\mathbf{Y}}{a_y}\right)^{2} + (\mathbf{n}\cdot \mathbf{H})^{2}\right)^{2}\right]$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_r} \left[
 \pi \cdot a_x \cdot a_y \cdot \left(\left(\frac{\mathbf{H}\cdot
 \mathbf{X}}{a_x}\right)^{2} + \left(\frac{\mathbf{H}\cdot
@@ -841,12 +841,12 @@ a_x \cdot \left(\left(\frac{\mathbf{H}\cdot
 \mathbf{Y}}{a_y}\right)^{2} + (\mathbf{n}\cdot \mathbf{H})^{2}\right)^{2}
 \cdot \frac{\partial}{\partial P_r} a_y
 \right)
-\end{align*}
+\end{align}
 
 
 
 ### $\frac{\partial}{\partial P_r} a_x$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_r} a_x &=
 \frac{\partial}{\partial P_r} \max\left(0.001, \frac{P_r^{2}}{\text{aspect}}\right)\\
 &=
@@ -859,12 +859,12 @@ a_x \cdot \left(\left(\frac{\mathbf{H}\cdot
 0 & \text{if }\frac{P_r^{2}}{\text{aspect}} < 0.001 \\
 \frac{2 \cdot P_r}{\text{aspect}} & \text{else}
 \end{cases} \\
-\end{align*}
+\end{align}
 
 
 
 ### $\frac{\partial}{\partial P_r} a_y$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_r} a_y &=
 \frac{\partial}{\partial P_r} \max\left(0.001, P_r^{2}\cdot \text{aspect}\right)\\
 &=
@@ -877,61 +877,61 @@ a_x \cdot \left(\left(\frac{\mathbf{H}\cdot
 0 & \text{if }P_r^{2}\cdot\text{aspect} < 0.001 \\
 2\cdot P_r \cdot \text{aspect} & \text{else}
 \end{cases} \\
-\end{align*}
+\end{align}
 
 
 ### $\frac{\partial}{\partial P_r} \left(\left(\frac{\mathbf{H}\cdot\mathbf{X}}{a_x}\right)^{2} + \left(\frac{\mathbf{H}\cdot\mathbf{Y}}{a_y}\right)^{2} + (\mathbf{n}\cdot \mathbf{H})^{2}\right)^{2}$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_r} \left(\left(\frac{\mathbf{H}\cdot\mathbf{X}}{a_x}\right)^{2} + \left(\frac{\mathbf{H}\cdot\mathbf{Y}}{a_y}\right)^{2} + (\mathbf{n}\cdot \mathbf{H})^{2}\right)^{2} &=
 2 \cdot \left(\left(\frac{\mathbf{H}\cdot\mathbf{X}}{a_x}\right)^{2} + \left(\frac{\mathbf{H}\cdot\mathbf{Y}}{a_y}\right)^{2} + (\mathbf{n}\cdot \mathbf{H})^{2}\right)\cdot
 \frac{\partial}{\partial P_r} \left(\left(\frac{\mathbf{H}\cdot\mathbf{X}}{a_x}\right)^{2} + \left(\frac{\mathbf{H}\cdot\mathbf{Y}}{a_y}\right)^{2} + (\mathbf{n}\cdot \mathbf{H})^{2}\right)
-\end{align*}
+\end{align}
 
 
 ### $\frac{\partial}{\partial P_r} \left(\left(\frac{\mathbf{H}\cdot\mathbf{X}}{a_x}\right)^{2} + \left(\frac{\mathbf{H}\cdot\mathbf{Y}}{a_y}\right)^{2} + (\mathbf{n}\cdot \mathbf{H})^{2}\right)$
 
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_r} \left(\left(\frac{\mathbf{H}\cdot\mathbf{X}}{a_x}\right)^{2} + \left(\frac{\mathbf{H}\cdot\mathbf{Y}}{a_y}\right)^{2} + (\mathbf{n}\cdot \mathbf{H})^{2}\right) &=
 \frac{\partial}{\partial P_r} \left(\frac{\mathbf{H}\cdot\mathbf{X}}{a_x}\right)^{2} + \frac{\partial}{\partial P_r} \left(\frac{\mathbf{H}\cdot\mathbf{Y}}{a_y}\right)^{2} 
-\end{align*}
+\end{align}
 
 
 
 ### $\frac{\partial}{\partial P_r} \left(\frac{\mathbf{H}\cdot\mathbf{X}}{a_x}\right)^{2}$
 
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_r} \left(\frac{\mathbf{H}\cdot\mathbf{X}}{a_x}\right)^{2} &=
 2 \cdot \frac{\mathbf{H}\cdot\mathbf{X}}{a_x} \cdot \frac{\partial}{\partial P_r} \left(\frac{\mathbf{H}\cdot\mathbf{X}}{a_x}\right)
-\end{align*}
+\end{align}
 
 
 
 ### $\frac{\partial}{\partial P_r} \left(\frac{\mathbf{H}\cdot\mathbf{Y}}{a_y}\right)^{2}$
 
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_r} \left(\frac{\mathbf{H}\cdot\mathbf{Y}}{a_y}\right)^{2} &=
 2 \cdot \frac{\mathbf{H}\cdot\mathbf{Y}}{a_y} \cdot \frac{\partial}{\partial P_r} \left(\frac{\mathbf{H}\cdot\mathbf{Y}}{a_y}\right)
-\end{align*}
+\end{align}
 
 
 ### $\frac{\partial}{\partial P_r} \left(\frac{\mathbf{H}\cdot\mathbf{X}}{a_x}\right)$
 
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_r} \left(\frac{\mathbf{H}\cdot\mathbf{X}}{a_x}\right) 
 &=
 \frac{-(\mathbf{H}\cdot\mathbf{X})\cdot\frac{\partial}{\partial P_r} a_x}{a_x^{2}}
-\end{align*}
+\end{align}
 
 ### $\frac{\partial}{\partial P_r} \left(\frac{\mathbf{H}\cdot\mathbf{Y}}{a_y}\right)$
 
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_r} \left(\frac{\mathbf{H}\cdot\mathbf{Y}}{a_y}\right) 
 &=
 \frac{-(\mathbf{H}\cdot\mathbf{Y})\cdot\frac{\partial}{\partial P_r} a_y}{a_y^{2}}
-\end{align*}
+\end{align}
 
 ### $\frac{\partial}{\partial P_r} G_s$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_r} G_s &=
 \frac{\partial}{\partial P_r}  \left(
  \text{smithG}(\mathbf{n} \cdot \mathbf{L}, \mathbf{L} \cdot \mathbf{X},
@@ -951,13 +951,13 @@ a_x \cdot \left(\left(\frac{\mathbf{H}\cdot
 \mathbf{V} \cdot \mathbf{Y}, a_x, a_y)
 \cdot \frac{\partial}{\partial P_r}\text{smithG}(\mathbf{n} \cdot \mathbf{L}, \mathbf{L} \cdot \mathbf{X},
 \mathbf{L} \cdot \mathbf{Y}, a_x, a_y)
-\end{align*}
+\end{align}
 
 
 
 ### $\frac{\partial}{\partial P_r} \text{smithG}(\mathbf{n} \cdot \mathbf{V}, \mathbf{V} \cdot \mathbf{X},\mathbf{V} \cdot \mathbf{Y}, a_x, a_y)$
 If $\mathbf{n}\cdot\mathbf{V} \geq 0$:
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_r} \text{smithG}(\mathbf{n} \cdot \mathbf{V}, \mathbf{V} \cdot \mathbf{X},\mathbf{V} \cdot \mathbf{Y}, a_x, a_y)
 &=
 \frac{\partial}{\partial P_r}
@@ -1002,18 +1002,18 @@ If $\mathbf{n}\cdot\mathbf{V} \geq 0$:
 + (\mathbf{n}\cdot{\mathbf{V}})^{2}} \cdot \left(\mathbf{n}\cdot\mathbf{V} + \sqrt{(\mathbf{V}\cdot\mathbf{X}\cdot a_x)^{2} +
 (\mathbf{V}\cdot\mathbf{Y}\cdot a_y)^{2}
 + (\mathbf{n}\cdot{\mathbf{V}})^{2}}\right)^{2}}\\
-\end{align*}
+\end{align}
 
 otherwise:
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_r} \text{smithG}(\mathbf{n} \cdot \mathbf{V}, \mathbf{V} \cdot \mathbf{X},\mathbf{V} \cdot \mathbf{Y}, a_x, a_y)
 &= 0
-\end{align*}
+\end{align}
 
 
 ### $\frac{\partial}{\partial P_r} \text{smithG}(\mathbf{n} \cdot \mathbf{L}, \mathbf{L} \cdot \mathbf{X},\mathbf{L} \cdot \mathbf{Y}, a_x, a_y)$
 If $\mathbf{n}\cdot\mathbf{L} \geq 0$:
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_r} \text{smithG}(\mathbf{n} \cdot \mathbf{L}, \mathbf{L} \cdot \mathbf{X},\mathbf{L} \cdot \mathbf{Y}, a_x, a_y)
 &=
 \frac{\partial}{\partial P_r}
@@ -1058,17 +1058,17 @@ If $\mathbf{n}\cdot\mathbf{L} \geq 0$:
 + (\mathbf{n}\cdot{\mathbf{L}})^{2}} \cdot \left(\mathbf{n}\cdot\mathbf{L} + \sqrt{(\mathbf{L}\cdot\mathbf{X}\cdot a_x)^{2} +
 (\mathbf{L}\cdot\mathbf{Y}\cdot a_y)^{2}
 + (\mathbf{n}\cdot{\mathbf{L}})^{2}}\right)^{2}}\\
-\end{align*}
+\end{align}
 
 otherwise:
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_r} \text{smithG}(\mathbf{n} \cdot \mathbf{L}, \mathbf{L} \cdot \mathbf{X},\mathbf{L} \cdot \mathbf{Y}, a_x, a_y)
 &= 0
-\end{align*}
+\end{align}
 
 
 ## $\frac{\partial}{\partial P_{st}} BRDF$
-\begin{align*}
+\begin{align}
 \frac{\partial \text{BRDF}}{\partial P_{st}} &= 
 \frac{\partial}{\partial P_{st}}\left(\frac{1}{\pi} \text{mix}(F_d, ss,
 P_{ss}) \cdot \mathbf{C_{dlin}} +
@@ -1079,12 +1079,12 @@ D_r \\
 &= \frac{\partial}{\partial P_{st}}G_s\cdot \mathbf{F_s} \cdot D_s \\
 &= 
 G_s\cdot D_s \cdot \frac{\partial}{\partial P_{st}}\mathbf{F_s} \\
-\end{align*}
+\end{align}
 
 
 
 ### $\frac{\partial}{\partial P_{st}} \mathbf{F_S}$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_{st}} \mathbf{F_S} &=
 \frac{\partial}{\partial P_{st}} \text{mix}(\mathbf{C_{spec0}}, \mathbf{1}, F_H)\\
 &=
@@ -1094,12 +1094,12 @@ G_s\cdot D_s \cdot \frac{\partial}{\partial P_{st}}\mathbf{F_s} \\
 \frac{\partial}{\partial P_{st}} \mathbf{C_{spec0}}\\
 &=
 (1 - F_H) \cdot \frac{\partial}{\partial P_{st}} \mathbf{C_{spec0}}
-\end{align*}
+\end{align}
 
 
 
 ### $\frac{\partial}{\partial P_{st}} \mathbf{C_{spec0}}$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_{st}} \mathbf{C_{spec0}} &= 
 \frac{\partial}{\partial P_{st}} \left(
 \text{mix}(P_s \cdot 0.08 \cdot \text{mix}(\mathbf{1},
@@ -1124,12 +1124,12 @@ P_s \cdot 0.08 \cdot  (\mathbf{C_{tint}} - \mathbf{1})
 \\
 &=
 P_s \cdot 0.08 \cdot  (\mathbf{C_{tint}} - \mathbf{1})\cdot (1 - P_m)\\
-\end{align*}
+\end{align}
 
 
 
 ## $\frac{\partial}{\partial P_{ani}} BRDF$
-\begin{align*}
+\begin{align}
 \frac{\partial \text{BRDF}}{\partial P_{ani}} &= 
 \frac{\partial}{\partial P_{ani}}\left(\frac{1}{\pi} \text{mix}(F_d, ss,
 P_{ss}) \cdot \mathbf{C_{dlin}} +
@@ -1140,10 +1140,10 @@ D_r \\
 &= \mathbf{F_s} \cdot \frac{\partial}{\partial P_{ani}} \left(G_s\cdot D_s \right)\\
 &= \mathbf{F_s} \cdot \left( D_s\cdot \frac{\partial}{\partial P_{ani}} G_s +
  G_s \frac{\partial}{\partial P_{ani}} D_s\right)\\
-\end{align*}
+\end{align}
 
 ### $\frac{\partial}{\partial P_{ani}} G_s$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_{ani}} G_s &=
 \frac{\partial}{\partial P_{ani}}\left(
 \text{smithG}(\mathbf{n} \cdot \mathbf{L}, \mathbf{L} \cdot \mathbf{X},
@@ -1165,13 +1165,13 @@ D_r \\
 \frac{\partial}{\partial P_{ani}}
 \text{smithG}(\mathbf{n} \cdot \mathbf{L}, \mathbf{L} \cdot \mathbf{X},
 \mathbf{L} \cdot \mathbf{Y}, a_x, a_y)
-\end{align*}
+\end{align}
 
 ### $\frac{\partial}{\partial P_{ani}} \text{smithG}(\mathbf{n} \cdot \mathbf{L}, \mathbf{L} \cdot \mathbf{X},\mathbf{L} \cdot \mathbf{Y}, a_x, a_y)$
 This is basically the same as the derivative with respect to $P_r$.
 
 If $\mathbf{N}\cdot\mathbf{L} \geq 0$:
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_{ani}} \text{smithG}(\mathbf{n} \cdot \mathbf{L}, \mathbf{L} \cdot \mathbf{X},\mathbf{L} \cdot \mathbf{Y}, a_x, a_y)
 &=
 \frac{\partial}{\partial P_{ani}}
@@ -1216,20 +1216,20 @@ If $\mathbf{N}\cdot\mathbf{L} \geq 0$:
 + (\mathbf{n}\cdot{\mathbf{L}})^{2}} \cdot \left(\mathbf{n}\cdot\mathbf{L} + \sqrt{(\mathbf{L}\cdot\mathbf{X}\cdot a_x)^{2} +
 (\mathbf{L}\cdot\mathbf{Y}\cdot a_y)^{2}
 + (\mathbf{n}\cdot{\mathbf{L}})^{2}}\right)^{2}}\\
-\end{align*}
+\end{align}
 
 Otherwise
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_{ani}} \text{smithG}(\mathbf{n} \cdot \mathbf{L}, \mathbf{L} \cdot \mathbf{X},\mathbf{L} \cdot \mathbf{Y}, a_x, a_y)
 &= 0
-\end{align*}
+\end{align}
 
 ### $\frac{\partial}{\partial P_{ani}} \text{smithG}(\mathbf{n} \cdot \mathbf{V}, \mathbf{V} \cdot \mathbf{X},\mathbf{V} \cdot \mathbf{Y}, a_x, a_y)$
 This is basically the same as the one above just with $\mathbf{V}$ instead of
 
 If $\mathbf{N}\cdot\mathbf{V} \geq 0$:
 $\mathbf{L}$.
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_{ani}} \text{smithG}(\mathbf{n} \cdot \mathbf{V}, \mathbf{V} \cdot \mathbf{X},\mathbf{V} \cdot \mathbf{Y}, a_x, a_y)
 &=
 \frac{\partial}{\partial P_{ani}}
@@ -1274,17 +1274,17 @@ $\mathbf{L}$.
 + (\mathbf{n}\cdot{\mathbf{V}})^{2}} \cdot \left(\mathbf{n}\cdot\mathbf{V} + \sqrt{(\mathbf{V}\cdot\mathbf{X}\cdot a_x)^{2} +
 (\mathbf{V}\cdot\mathbf{Y}\cdot a_y)^{2}
 + (\mathbf{n}\cdot{\mathbf{V}})^{2}}\right)^{2}}\\
-\end{align*}
+\end{align}
 
 Otherwise
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_{ani}} \text{smithG}(\mathbf{n} \cdot \mathbf{V}, \mathbf{V} \cdot \mathbf{X},\mathbf{V} \cdot \mathbf{Y}, a_x, a_y)
 &= 0
-\end{align*}
+\end{align}
 
 
 ### $\frac{\partial}{\partial P_{ani}} a_x$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_{ani}} a_x &= \frac{\partial}{\partial P_{ani}}
 \max\left(0.001,\frac{P_r^{2}}{\text{aspect}}\right)\\
 &=
@@ -1292,21 +1292,21 @@ Otherwise
 0 & \text{if} & \frac{P_r^{2}}{\text{aspect}} < 0.001\\
 \frac{\partial}{\partial P_{ani}}\frac{P_r^{2}}{\text{aspect}} & \text{else}
 \end{cases}
-\end{align*}
+\end{align}
 
 
 
 ### $\frac{\partial}{\partial P_{ani}}\frac{P_r^{2}}{\text{aspect}}$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_{ani}}\frac{P_r^{2}}{\text{aspect}} &=
 \frac{-P_r^{2}\cdot\frac{\partial}{\partial P_{ani}}\text{aspect}}
 {aspect^{2}}
-\end{align*}
+\end{align}
 
 
 ### $\frac{\partial}{\partial P_{ani}} a_y$
 Shares intermediate result from above
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_{ani}} a_x &= \frac{\partial}{\partial P_{ani}}
 \max\left(0.001, P_r^{2}\cdot\text{aspect}\right)\\
 &=
@@ -1314,21 +1314,21 @@ Shares intermediate result from above
 0 & \text{if} & P_r^{2}\cdot\text{aspect} < 0.001\\
 P_r^{2}\cdot\frac{\partial}{\partial P_{ani}}\text{aspect} & \text{else}
 \end{cases}
-\end{align*}
+\end{align}
 
 
 ### $\frac{\partial}{\partial P_{ani}}\text{aspect}$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_{ani}}\text{aspect} &=
 \frac{\partial}{\partial P_{ani}} \sqrt{1 - P_{ani}\cdot 0.9} \\
 &= \frac{\frac{\partial}{\partial P_{ani}}\left(1-P_{ani}\cdot 0.9\right)}
 {2\cdot \sqrt{1 - P_{ani}\cdot 0.9}}\\
 &= -\frac{0.45}
 {\sqrt{1 - P_{ani}\cdot 0.9}}\\
-\end{align*}
+\end{align}
 
 ### $\frac{\partial}{\partial P_{ani}} D_s$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_{ani}} D_s &=
 \frac{\partial}{\partial P_{ani}}\left(
 \frac{1}{\pi \cdot a_x \cdot a_y \cdot \left(\left(\frac{\mathbf{H}\cdot
@@ -1344,13 +1344,13 @@ P_r^{2}\cdot\frac{\partial}{\partial P_{ani}}\text{aspect} & \text{else}
 \mathbf{X}}{a_x}\right)^{2} + \left(\frac{\mathbf{H}\cdot
 \mathbf{Y}}{a_y}\right)^{2} + (\mathbf{n}\cdot \mathbf{H})^{2}\right)^{2}\right)^{2}}
 \\
-\end{align*}
+\end{align}
 
 
 
 
 ### $\frac{\partial}{\partial P_{ani}}\left(\pi \cdot a_x \cdot a_y \cdot \left(\left(\frac{\mathbf{H}\cdot\mathbf{X}}{a_x}\right)^{2} + \left(\frac{\mathbf{H}\cdot\mathbf{Y}}{a_y}\right)^{2} + (\mathbf{n}\cdot \mathbf{H})^{2}\right)^{2}\right)$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_{ani}}\left(\pi \cdot a_x \cdot a_y \cdot
 \left(\left(\frac{\mathbf{H}\cdot\mathbf{X}}{a_x}\right)^{2} +
 \left(\frac{\mathbf{H}\cdot\mathbf{Y}}{a_y}\right)^{2} + (\mathbf{n}\cdot
@@ -1380,12 +1380,12 @@ a_x \cdot a_y \cdot \frac{\partial}{\partial P_{ani}}
 \left(\frac{\mathbf{H}\cdot\mathbf{Y}}{a_y}\right)^{2} + (\mathbf{n}\cdot
 \mathbf{H})^{2}\right)^{2}
 \right]
-\end{align*}
+\end{align}
 
 
 
 ### $\frac{\partial}{\partial P_{ani}} \left(\left(\frac{\mathbf{H}\cdot\mathbf{X}}{a_x}\right)^{2} + \left(\frac{\mathbf{H}\cdot\mathbf{Y}}{a_y}\right)^{2} + (\mathbf{n}\cdot \mathbf{H})^{2}\right)^{2}$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_{ani}}
 \left(\left(\frac{\mathbf{H}\cdot\mathbf{X}}{a_x}\right)^{2} +
 \left(\frac{\mathbf{H}\cdot\mathbf{Y}}{a_y}\right)^{2} + (\mathbf{n}\cdot
@@ -1400,12 +1400,12 @@ a_x \cdot a_y \cdot \frac{\partial}{\partial P_{ani}}
 \left(\frac{\mathbf{H}\cdot\mathbf{Y}}{a_y}\right)^{2} + (\mathbf{n}\cdot
 \mathbf{H})^{2}
 \right)
-\end{align*}
+\end{align}
 
 
 
 ### $\frac{\partial}{\partial P_{ani}} \left(\left(\frac{\mathbf{H}\cdot\mathbf{X}}{a_x}\right)^{2} + \left(\frac{\mathbf{H}\cdot\mathbf{Y}}{a_y}\right)^{2} + (\mathbf{n}\cdot \mathbf{H})^{2}\right)$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_{ani}} \left(
 \left(\frac{\mathbf{H}\cdot\mathbf{X}}{a_x}\right)^{2} +
 \left(\frac{\mathbf{H}\cdot\mathbf{Y}}{a_y}\right)^{2} + (\mathbf{n}\cdot
@@ -1416,12 +1416,12 @@ a_x \cdot a_y \cdot \frac{\partial}{\partial P_{ani}}
 \left(\frac{\mathbf{H}\cdot\mathbf{X}}{a_x}\right)^{2} +
 \frac{\partial}{\partial P_{ani}} 
 \left(\frac{\mathbf{H}\cdot\mathbf{Y}}{a_y}\right)^{2}
-\end{align*}
+\end{align}
 
 
 
 ### $\frac{\partial}{\partial P_{ani}} \left(\frac{\mathbf{H}\cdot\mathbf{X}}{a_x}\right)^{2}$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_{ani}} 
 \left(\frac{\mathbf{H}\cdot\mathbf{X}}{a_x}\right)^{2}
 &=
@@ -1429,13 +1429,13 @@ a_x \cdot a_y \cdot \frac{\partial}{\partial P_{ani}}
 \frac{\mathbf{H}\cdot\mathbf{X}}{a_x} \cdot
 \frac{\partial}{\partial P_{ani}} 
 \frac{\mathbf{H}\cdot\mathbf{X}}{a_x}
-\end{align*}
+\end{align}
 
 
 
 
 ### $\frac{\partial}{\partial P_{ani}} \left(\frac{\mathbf{H}\cdot\mathbf{Y}}{a_y}\right)^{2}$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_{ani}} 
 \left(\frac{\mathbf{H}\cdot\mathbf{Y}}{a_y}\right)^{2}
 &=
@@ -1443,36 +1443,36 @@ a_x \cdot a_y \cdot \frac{\partial}{\partial P_{ani}}
 \frac{\mathbf{H}\cdot\mathbf{Y}}{a_y} \cdot
 \frac{\partial}{\partial P_{ani}} 
 \frac{\mathbf{H}\cdot\mathbf{Y}}{a_y}
-\end{align*}
+\end{align}
 
 
 
 ### $\frac{\partial}{\partial P_{ani}} \frac{\mathbf{H}\cdot\mathbf{X}}{a_x}$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_{ani}} 
 \frac{\mathbf{H}\cdot\mathbf{X}}{a_x} &=
 \frac{-
 (\mathbf{H}\cdot\mathbf{X})\cdot
 \frac{\partial}{\partial P_{ani}}  a_x}
 {a_x^{2}}
-\end{align*}
+\end{align}
 
 
 
 
 ### $\frac{\partial}{\partial P_{ani}} \frac{\mathbf{H}\cdot\mathbf{Y}}{a_y}$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_{ani}} 
 \frac{\mathbf{H}\cdot\mathbf{Y}}{a_y} &=
 \frac{-
 (\mathbf{H}\cdot\mathbf{Y})\cdot
 \frac{\partial}{\partial P_{ani}}  a_y}
 {a_y^{2}}
-\end{align*}
+\end{align}
 
 
 ## $\frac{\partial}{\partial P_{sh}} BRDF$
-\begin{align*}
+\begin{align}
 \frac{\partial \text{BRDF}}{\partial P_{sh}} &= 
 \frac{\partial}{\partial P_{sh}}\left(\frac{1}{\pi} \text{mix}(F_d, ss,
 P_{ss}) \cdot \mathbf{C_{dlin}} +
@@ -1489,25 +1489,25 @@ P_{ss}) \cdot \mathbf{C_{dlin}} +
 &=
 (1 - P_{m}) \cdot
  \frac{\partial}{\partial P_{sh}} \mathbf{F_{sheen}}
-\end{align*}
+\end{align}
 
 
 
 
 ### $\frac{\partial}{\partial P_{sh}} \mathbf{F_{sheen}}$
-\begin{align*}
+\begin{align}
  \frac{\partial}{\partial P_{sh}} \mathbf{F_{sheen}} &= 
 \frac{\partial}{\partial P_{sh}}
 \left(F_H \cdot P_{sh} \cdot \mathbf{C_{sheen}}\right)\\
 &=
 F_h \cdot \mathbf{C_{sheen}}
-\end{align*}
+\end{align}
 
 
 
 
 ## $\frac{\partial}{\partial P_{sht}} BRDF$
-\begin{align*}
+\begin{align}
 \frac{\partial \text{BRDF}}{\partial P_{sh}} &= 
 \frac{\partial}{\partial P_{sh}}\left(\frac{1}{\pi} \text{mix}(F_d, ss,
 P_{ss}) \cdot \mathbf{C_{dlin}} +
@@ -1524,26 +1524,26 @@ P_{ss}) \cdot \mathbf{C_{dlin}} +
 &=
 (1 - P_{m}) \cdot
 \frac{\partial}{\partial P_{sht}} \mathbf{F_{sheen}} \\
-\end{align*}
+\end{align}
 
 
 
 
 
 ### $\frac{\partial}{\partial P_{sht}} \mathbf{F_{sheen}}$
-\begin{align*}
+\begin{align}
  \frac{\partial}{\partial P_{sht}} \mathbf{F_{sheen}} &= 
 \frac{\partial}{\partial P_{sht}}
 \left(F_H \cdot P_{sh} \cdot \mathbf{C_{sheen}}\right)\\
 &=
 F_H \cdot P_{sh} \cdot
 \frac{\partial}{\partial P_{sht}} \mathbf{C_{sheen}}\\
-\end{align*}
+\end{align}
 
 
 
 ### $\frac{\partial}{\partial P_{sht}} \mathbf{C_{sheen}}$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_{sht}}
  \mathbf{C_{sheen}} &=
 \frac{\partial}{\partial P_{sht}}
@@ -1554,12 +1554,12 @@ F_H \cdot P_{sh} \cdot
 \right) \\
 &= 
 \mathbf{C_{tint}} - \mathbf{1}
-\end{align*}
+\end{align}
 
 
 
 ## $\frac{\partial}{\partial P_c} BRDF$
-\begin{align*}
+\begin{align}
 \frac{\partial \text{BRDF}}{\partial P_c} &= 
 \frac{\partial}{\partial P_c}\left(\frac{1}{\pi} \text{mix}(F_d, ss,
 P_{ss}) \cdot \mathbf{C_{dlin}} +
@@ -1569,14 +1569,14 @@ P_{ss}) \cdot \mathbf{C_{dlin}} +
 D_r \\
 &=
 0.25\cdot G_r \cdot F_r \cdot D_r \\
-\end{align*}
+\end{align}
 
 
 
 
 
 ## $\frac{\partial}{\partial P_{cg}} BRDF$
-\begin{align*}
+\begin{align}
 \frac{\partial \text{BRDF}}{\partial P_{cg}} &= 
 \frac{\partial}{\partial P_{cg}}\left(\frac{1}{\pi} \text{mix}(F_d, ss,
 P_{ss}) \cdot \mathbf{C_{dlin}} +
@@ -1585,12 +1585,12 @@ P_{ss}) \cdot \mathbf{C_{dlin}} +
 & + \frac{\partial}{\partial P_{cg}}0.25\cdot P_c\cdot G_r \cdot F_r \cdot D_r \\
 &=
 0.25\cdot P_c\cdot G_r \cdot F_r \cdot \frac{\partial}{\partial P_{cg}}D_r \\
-\end{align*}
+\end{align}
 
 
 
 ### $\frac{\partial}{\partial P_{cg}}D_r$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_{cg}} D_r &=
  \frac{\partial}{\partial P_{cg}} \frac{a_2 - 1}{\pi\cdot\log(a_2)\cdot
 (1+(a_2-1)\cdot(\mathbf{n}\cdot\mathbf{H})^{2})}\\
@@ -1605,7 +1605,7 @@ P_{ss}) \cdot \mathbf{C_{dlin}} +
 \right]}
 {\left(\pi\cdot\log(a_2)\cdot
 (1+(a_2-1)\cdot(\mathbf{n}\cdot\mathbf{H})^{2})\right)^{2}}
-\end{align*}
+\end{align}
 
 
 !!! Warn
@@ -1613,7 +1613,7 @@ P_{ss}) \cdot \mathbf{C_{dlin}} +
 
 ### $\frac{\partial}{\partial P_{cg}}\left[\pi\cdot\log(a2)\cdot\left(1+(a_2-1)\cdot(\mathbf{n}\cdot\mathbf{H})^{2}\right)\right]$
 
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_{cg}}\left[\pi\cdot\log(a2)\cdot\left(1+(a_2-1)\cdot(\mathbf{n}\cdot\mathbf{H})^{2}\right)\right]
 &=
 \pi \cdot \left( 
@@ -1636,21 +1636,21 @@ P_{ss}) \cdot \mathbf{C_{dlin}} +
  \frac{\partial}{\partial P_{cg}}\left[
 a_2\right]
 \right) \\
-\end{align*}
+\end{align}
 
 
 
 ### $\frac{\partial}{\partial P_{cg}} \log(a_2)$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_{cg}} \log(a_2) &=
 \frac{\frac{\partial}{\partial P_{cg}} a_2}
 {a_2}
-\end{align*}
+\end{align}
 
 
 
 ### $\frac{\partial}{\partial P_{cg}} a_2$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial P_{cg}} a_2 &=
 \text{mix}(0.1, 0.001, P_{cg})^{2}\\
 &=
@@ -1666,32 +1666,32 @@ a_2\right]
 0.099\\
 &=
 -0.198 \cdot \left(0.1 - 0.099\cdot P_{cg} \right)
-\end{align*}
+\end{align}
 
 
 
 ## $\frac{\partial}{\partial \mathbf{n}} BRDF$
 
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial \mathbf{n}} BRDF &=
 \frac{\partial}{\partial \mathbf{n}}\left(\frac{1}{\pi} \text{mix}(F_d, ss,
 P_{ss}) \cdot \mathbf{C_{dlin}} +
 \mathbf{F_{sheen}}\right) \cdot (1 - P_{m}) \\
 & + \frac{\partial}{\partial \mathbf{n}}G_s\cdot \mathbf{F_s} \cdot D_s \\
 & + \frac{\partial}{\partial \mathbf{n}}0.25\cdot P_c\cdot G_r \cdot F_r \cdot D_r \\
-\end{align*}
+\end{align}
 
 Part1:
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial \mathbf{n}}\left(\frac{1}{\pi} \text{mix}(F_d, ss,
 P_{ss}) \cdot \mathbf{C_{dlin}} +
 \mathbf{F_{sheen}}\right) \cdot (1 - P_{m}) &= 
  (1 - P_{m}) \cdot \frac{1}{\pi} \cdot \mathbf{C_{dlin}}
  \frac{\partial}{\partial \mathbf{n}} \text{mix}(F_d, ss, P_{ss})
-\end{align*}
+\end{align}
 
 Part2:
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial \mathbf{n}}G_s\cdot \mathbf{F_s} \cdot D_s &=
 \mathbf{F_s} \cdot \frac{\partial}{\partial \mathbf{n}}\left(
 G_s\cdot  D_s
@@ -1701,24 +1701,24 @@ G_s\cdot  D_s
 G_s
 + G_s\cdot \frac{\partial}{\partial \mathbf{n}}D_s
 \right)
-\end{align*}
+\end{align}
 
 Part3:
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial \mathbf{n}}0.25\cdot P_c\cdot G_r \cdot F_r \cdot D_r &=
 0.25\cdot F_r \cdot \frac{\partial}{\partial \mathbf{n}} \left(G_r \cdot D_r\right)\\
 &=
 0.25\cdot F_r \cdot \left(D_r \cdot \frac{\partial}{\partial \mathbf{n}} G_r +
  G_r \cdot \frac{\partial}{\partial \mathbf{n}} D_r
 \right)\\
-\end{align*}
+\end{align}
 
 
 
 
 
 ### $\frac{\partial}{\partial \mathbf{n}} \text{mix}(F_d, ss, P_{ss})$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial \mathbf{n}} \text{mix}(F_d, ss, P_{ss}) &=
 \frac{\partial}{\partial \mathbf{n}} \left(F_d + P_{ss} (ss - F_d)\right)\\
 &=
@@ -1727,14 +1727,14 @@ P_{ss} \cdot \left(
 \frac{\partial}{\partial \mathbf{n}} ss - 
 \frac{\partial}{\partial \mathbf{n}} F_d 
 \right)
-\end{align*}
+\end{align}
 
 
 
 
 
 ### $\frac{\partial}{\partial \mathbf{n}} ss$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial \mathbf{n}} ss &=
  \frac{\partial}{\partial \mathbf{n}} \left[
  1.25\left(F_{ss} \left(\frac{1}{\max(10^{-6}, \mathbf{n}\cdot \mathbf{L}) +
@@ -1750,14 +1750,14 @@ F_{ss} \left(\frac{1}{\max(10^{-6}, \mathbf{n}\cdot \mathbf{L}) +
 F_{ss} \cdot \frac{\partial}{\partial \mathbf{n}} \left(
 \frac{1}{\max(10^{-6}, \mathbf{n}\cdot \mathbf{L}) +
 \max(10^{-6}, \mathbf{n}\cdot \mathbf{V})}\right)
-\end{align*}
+\end{align}
 
 !!! Warn
     Use softmax instead to get continuous derivative $\text{softmax}(x) = \frac{x+\sqrt{x^2+\epsilon^2}}{2}$ 
 
 
 ### $\frac{\partial}{\partial \mathbf{n}} F_{ss}$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial \mathbf{n}} F_{ss}  &= 
 \frac{\partial}{\partial \mathbf{n}}
 \text{mix}(1, F_{ss90}, F_L) \cdot \text{mix}(1, F_{ss90}, F_V)\\
@@ -1812,11 +1812,11 @@ F_{ss} \cdot \frac{\partial}{\partial \mathbf{n}} \left(
 \right) \cdot
 \frac{\partial}{\partial \mathbf{n}} F_V
 \right]
-\end{align*}
+\end{align}
 
 
 ### $\frac{\partial}{\partial \mathbf{n}} F_L$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial \mathbf{n}} F_L &=
 \frac{\partial}{\partial \mathbf{n}} \text{schlick}(\max(0,\mathbf{n} \cdot
 \mathbf{L})) \\
@@ -1835,13 +1835,13 @@ F_{ss} \cdot \frac{\partial}{\partial \mathbf{n}} \left(
   & \text{if} & 0 < (\mathbf{n} \cdot \mathbf{L}) < 1\\
   0  & \text{else}\\
 \end{cases}\\
-\end{align*}
+\end{align}
 
 
 
 
 ### $\frac{\partial}{\partial \mathbf{n}} F_V$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial \mathbf{n}} F_V &=
 \frac{\partial}{\partial \mathbf{n}} \text{schlick}(\max(0,\mathbf{n} \cdot
 \mathbf{V})) \\
@@ -1860,12 +1860,12 @@ F_{ss} \cdot \frac{\partial}{\partial \mathbf{n}} \left(
   & \text{if} & 0 < (\mathbf{n} \cdot \mathbf{V}) < 1\\
   0  & \text{else}\\
 \end{cases}\\
-\end{align*}
+\end{align}
 
 
 
 ### $\frac{\partial}{\partial \mathbf{n}} \left(\frac{1}{\max(10^{-6}, \mathbf{n}\cdot \mathbf{L}) + \max(10^{-6}, \mathbf{n}\cdot \mathbf{V})}\right)$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial \mathbf{n}} \left(\frac{1}{
 \max(10^{-6}, \mathbf{n}\cdot \mathbf{L}) +
 \max(10^{-6}, \mathbf{n}\cdot \mathbf{V})}\right) &=
@@ -1875,31 +1875,31 @@ F_{ss} \cdot \frac{\partial}{\partial \mathbf{n}} \left(
 \mathbf{n}\cdot\mathbf{V})\right)}
 {\left(\max(10^{-6}, \mathbf{n}\cdot \mathbf{L}) +
 \max(10^{-6}, \mathbf{n}\cdot \mathbf{V})\right)^{2}}
-\end{align*}
+\end{align}
 
 
 ### $\frac{\partial}{\partial \mathbf{n}} \max(10^{-6}, \mathbf{n}\cdot\mathbf{L})$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial \mathbf{n}} \max(10^{-6}, \mathbf{n}\cdot\mathbf{L}) &= 
 \begin{cases}
 \mathbf{L} & \text{if} & \mathbf{n}\cdot\mathbf{L} >= 10^{-6}\\
 0 &\text{else}
 \end{cases}
-\end{align*}
+\end{align}
 
 
 ### $\frac{\partial}{\partial \mathbf{n}} \max(10^{-6}, \mathbf{n}\cdot\mathbf{V})$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial \mathbf{n}} \max(10^{-6}, \mathbf{n}\cdot\mathbf{V}) &= 
 \begin{cases}
 \mathbf{V} & \text{if} & \mathbf{n}\cdot\mathbf{V} >= 10^{-6}\\
 0 &\text{else}
 \end{cases}
-\end{align*}
+\end{align}
 
 
 ### $\frac{\partial}{\partial \mathbf{n}} F_d$
-\begin{align*}\frac{\partial}{\partial \mathbf{n}} F_d &=
+\begin{align}\frac{\partial}{\partial \mathbf{n}} F_d &=
 \frac{\partial}{\partial \mathbf{n}}\text{mix}(1, F_{d90}, F_L) \cdot \text{mix}(1, F_{d90}, F_V)\\
 &=
 \frac{\partial}{\partial \mathbf{n}}\left[
@@ -1920,14 +1920,14 @@ F_{ss} \cdot \frac{\partial}{\partial \mathbf{n}} \left(
 (F_{d90} - 1)\cdot \frac{\partial}{\partial \mathbf{n}}\left[ F_V \right] +
 \left(1 + F_V (F_{d90} - 1)\right) \cdot
 (F_{d90} - 1)\cdot \frac{\partial}{\partial \mathbf{n}}\left[ F_L  \right]
-\end{align*}
+\end{align}
 
 
 
 
 
 ### $\frac{\partial}{\partial \mathbf{n}} G_s$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial \mathbf{n}} G_s &=
  \frac{\partial}{\partial \mathbf{n}} \left[
 \text{smithG}(\mathbf{n} \cdot \mathbf{L}, \mathbf{L} \cdot \mathbf{X},
@@ -1949,7 +1949,7 @@ F_{ss} \cdot \frac{\partial}{\partial \mathbf{n}} \left(
 \text{smithG}(\mathbf{n} \cdot \mathbf{L}, \mathbf{L} \cdot \mathbf{X},
 \mathbf{L} \cdot \mathbf{Y}, a_x, a_y)
 \right]
-\end{align*}
+\end{align}
 
 
 
@@ -1958,7 +1958,7 @@ F_{ss} \cdot \frac{\partial}{\partial \mathbf{n}} \left(
 ### $\frac{\partial}{\partial \mathbf{n}} \left[ \text{smithG}(\mathbf{n} \cdot \mathbf{V}, \mathbf{V} \cdot \mathbf{X}, \mathbf{V} \cdot \mathbf{Y}, a_x, a_y) \right]$
 
 If $\mathbf{n}\cdot\mathbf{V} \geq 0$:
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial \mathbf{n}} \text{smithG}(\mathbf{n} \cdot \mathbf{V}, \mathbf{V} \cdot \mathbf{X},\mathbf{V} \cdot \mathbf{Y}, a_x, a_y)
 &=
 \frac{\partial}{\partial \mathbf{n}}
@@ -2009,20 +2009,20 @@ If $\mathbf{n}\cdot\mathbf{V} \geq 0$:
 {\left(\mathbf{n}\cdot\mathbf{V} + \sqrt{(\mathbf{V}\cdot\mathbf{X}\cdot a_x)^{2} +
 (\mathbf{V}\cdot\mathbf{Y}\cdot a_y)^{2}
 + (\mathbf{n}\cdot{\mathbf{V}})^{2}}\right)^{2}}\\
-\end{align*}
+\end{align}
 
 Otherwise:
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial \mathbf{n}} \text{smithG}(\mathbf{n} \cdot \mathbf{V}, \mathbf{V} \cdot \mathbf{X},\mathbf{V} \cdot \mathbf{Y}, a_x, a_y)
 &= 0
-\end{align*}
+\end{align}
 
 
 ### $\frac{\partial}{\partial \mathbf{n}} \left[ \text{smithG}(\mathbf{n} \cdot \mathbf{L}, \mathbf{L} \cdot \mathbf{X}, \mathbf{L} \cdot \mathbf{Y}, a_x, a_y) \right]$
 The same as the one above, but all $\mathbf{V}$ are substituded by $\mathbf{L}$.
 
 If $\mathbf{n}\cdot\mathbf{L} \geq 0$:
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial \mathbf{n}} \text{smithG}(\mathbf{n} \cdot \mathbf{L}, \mathbf{L} \cdot \mathbf{X},\mathbf{L} \cdot \mathbf{Y}, a_x, a_y)
 &=
 \frac{\partial}{\partial \mathbf{n}}
@@ -2073,13 +2073,13 @@ If $\mathbf{n}\cdot\mathbf{L} \geq 0$:
 {\left(\mathbf{n}\cdot\mathbf{L} + \sqrt{(\mathbf{L}\cdot\mathbf{X}\cdot a_x)^{2} +
 (\mathbf{L}\cdot\mathbf{Y}\cdot a_y)^{2}
 + (\mathbf{n}\cdot{\mathbf{L}})^{2}}\right)^{2}}\\
-\end{align*}
+\end{align}
 
 Otherwise:
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial \mathbf{n}} \text{smithG}(\mathbf{n} \cdot \mathbf{L}, \mathbf{L} \cdot \mathbf{X},\mathbf{L} \cdot \mathbf{Y}, a_x, a_y)
 &= 0
-\end{align*}
+\end{align}
 
 
 
@@ -2088,23 +2088,23 @@ Otherwise:
 ### $\frac{\partial}{\partial \mathbf{n}} D_s$
 Let:
 
-\begin{align*}
+\begin{align}
 E &= \left(\frac{\mathbf{H}\cdot
 \mathbf{X}}{a_x}\right)^{2} + \left(\frac{\mathbf{H}\cdot
 \mathbf{Y}}{a_y}\right)^{2} + (\mathbf{n}\cdot \mathbf{H})^{2}
-\end{align*}
+\end{align}
 
 Then
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial \mathbf{n}} D_s &=
 \frac{\partial}{\partial \mathbf{n}} 
 \frac{1}{\pi \cdot a_x \cdot a_y \cdot E^{2}}\\
 &=
 -\frac{2}{\pi \cdot a_x \cdot a_y} \frac{1}{E^{3}} \frac{\partial E}{\partial \mathbf{n}}
-\end{align*}
+\end{align}
 
 ### $\frac{\partial E}{\partial \mathbf{n}}$
-\begin{align*}
+\begin{align}
 \frac{\partial E}{\partial \mathbf{n}} &=
 \frac{\partial}{\partial \mathbf{n}} 
 \left(\frac{\mathbf{H}\cdot
@@ -2112,11 +2112,11 @@ Then
 \mathbf{Y}}{a_y}\right)^{2} + (\mathbf{n}\cdot \mathbf{H})^{2}\\
 &=
 2(\mathbf{H} \cdot \mathbf{n}) \cdot{\mathbf{H}}
-\end{align*}
+\end{align}
 
 
 ### $\frac{\partial}{\partial \mathbf{n}} G_r$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial \mathbf{n}} G_r
  &=
 \frac{\partial}{\partial \mathbf{n}}
@@ -2133,11 +2133,11 @@ Then
 \text{smithGTR}(\mathbf{n}\cdot \mathbf{L}) \cdot
 \frac{\partial}{\partial \mathbf{n}}
 \text{smithGTR}(\mathbf{n}\cdot \mathbf{V}) 
-\end{align*}
+\end{align}
 
 ### $\frac{\partial}{\partial \mathbf{n}} \text{smithGTR}(\mathbf{n}\cdot\mathbf{L})$
 If $\mathbf{n}\cdot\mathbf{L} \geq 0$:
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial \mathbf{n}}\text{smithGTR}(\mathbf{n}\cdot\mathbf{L}) 
 &=
 \frac{\partial}{\partial \mathbf{n}}
@@ -2160,19 +2160,19 @@ If $\mathbf{n}\cdot\mathbf{L} \geq 0$:
 (\mathbf{n}\cdot\mathbf{L})^{2}}}
 {\left(\mathbf{n}\cdot\mathbf{L} + \sqrt{0.25^{2} + (\mathbf{n}\cdot\mathbf{L})^{2} - 0.25^{2}\cdot
 (\mathbf{n}\cdot\mathbf{L})^{2}}\right)^{2}}\\
-\end{align*}
+\end{align}
 
 Otherwise
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial \mathbf{n}}\text{smithGTR}(\mathbf{n}\cdot\mathbf{L}) 
 &= 0
-\end{align*}
+\end{align}
 
 
 
 ### $\frac{\partial}{\partial \mathbf{n}} \text{smithGTR}(\mathbf{n}\cdot\mathbf{V})$
 If $\mathbf{n}\cdot\mathbf{V} \geq 0$:
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial \mathbf{n}}\text{smithGTR}(\mathbf{n}\cdot\mathbf{V}) 
 &=
 \frac{\partial}{\partial \mathbf{n}}
@@ -2195,19 +2195,19 @@ If $\mathbf{n}\cdot\mathbf{V} \geq 0$:
 (\mathbf{n}\cdot\mathbf{V})^{2}}}
 {\left(\mathbf{n}\cdot\mathbf{V} + \sqrt{0.25^{2} + (\mathbf{n}\cdot\mathbf{V})^{2} - 0.25^{2}\cdot
 (\mathbf{n}\cdot\mathbf{V})^{2}}\right)^{2}}\\
-\end{align*}
+\end{align}
 
 Otherwise:
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial \mathbf{n}}\text{smithGTR}(\mathbf{n}\cdot\mathbf{V}) 
 &= 0
-\end{align*}
+\end{align}
 
 
 
 
 ### $\frac{\partial}{\partial \mathbf{n}} \sqrt{0.25^{2} + (\mathbf{n}\cdot\mathbf{L})^{2} - 0.25^{2}\cdot (\mathbf{n}\cdot \mathbf{L})^{2}}$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial \mathbf{n}} \sqrt{0.25^{2} +
 (\mathbf{n}\cdot\mathbf{L})^{2} - 0.25^{2}\cdot (\mathbf{n}\cdot
 \mathbf{L})^{2}}
@@ -2227,16 +2227,16 @@ Otherwise:
 2 \cdot \sqrt{0.25^{2} + (\mathbf{n}\cdot\mathbf{L})^{2} - 0.25^{2}\cdot
 (\mathbf{n}\cdot \mathbf{L})^{2}}
 }\\
-\end{align*}
+\end{align}
 
 ### $\frac{\partial}{\partial \mathbf{n}} (\mathbf{n}\cdot\mathbf{L})^{2}$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial \mathbf{n}} (\mathbf{n}\cdot\mathbf{L})^{2} &=
 2\cdot (\mathbf{n}\cdot\mathbf{L}) \cdot \mathbf{L}
-\end{align*}
+\end{align}
 
 ### $\frac{\partial}{\partial \mathbf{n}} \sqrt{0.25^{2} + (\mathbf{n}\cdot\mathbf{V})^{2} - 0.25^{2}\cdot (\mathbf{n}\cdot \mathbf{V})^{2}}$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial \mathbf{n}} \sqrt{0.25^{2} +
 (\mathbf{n}\cdot\mathbf{V})^{2} - 0.25^{2}\cdot (\mathbf{n}\cdot
 \mathbf{V})^{2}}
@@ -2256,33 +2256,33 @@ Otherwise:
 2 \cdot \sqrt{0.25^{2} + (\mathbf{n}\cdot\mathbf{V})^{2} - 0.25^{2}\cdot
 (\mathbf{n}\cdot \mathbf{V})^{2}}
 }\\
-\end{align*}
+\end{align}
 
 ### $\frac{\partial}{\partial \mathbf{n}} (\mathbf{n}\cdot\mathbf{V})^{2}$
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial \mathbf{n}} (\mathbf{n}\cdot\mathbf{V})^{2} &=
 2\cdot (\mathbf{n}\cdot\mathbf{V}) \cdot \mathbf{V}
-\end{align*}
+\end{align}
 
 ### $\frac{\partial}{\partial \mathbf{n}} D_r$
 Let
-\begin{align*}
+\begin{align}
 E_1 &= 1+(a_2-1)\cdot (\mathbf{n}\cdot\mathbf{H})^{2}
-\end{align*}
+\end{align}
 Then
-\begin{align*}
+\begin{align}
 \frac{\partial}{\partial \mathbf{n}} D_r 
  &=
 \frac{a_2 - 1}{\pi\cdot\log(a_2)}\cdot\frac{\partial E_{1}^{-1}}{\partial \mathbf{n}}\\
 &= 
 -\frac{a_2 - 1}{\pi\cdot\log(a_2)\cdot E_{1}^{2}}\cdot\frac{\partial E_{1}}{\partial \mathbf{n}}\\
-\end{align*}
+\end{align}
 
 ### $\frac{\partial E_{1}}{\partial \mathbf{n}}$
-\begin{align*}
+\begin{align}
 \frac{\partial E_{1}}{\partial \mathbf{n}} &= \frac{\partial}{\partial \mathbf{n}} 1+(a_2-1)\cdot (\mathbf{n}\cdot\mathbf{H})^{2}\\
 &= 2(a_2-1)(\mathbf{n}\cdot\mathbf{H}) \mathbf{H}
-\end{align*}
+\end{align}
 
 
 Bibliography
