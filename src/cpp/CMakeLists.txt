@@ -36,6 +36,12 @@ target_link_libraries(principled_brdf_functions PRIVATE CUDA::cudart)
 # C++ standard
 target_compile_features(principled_brdf_functions PRIVATE cxx_std_17)
 
+# use OpenMP in c++ implementation
+find_package(OpenMP)
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(principled_brdf_functions PUBLIC OpenMP::OpenMP_CXX)
+endif()
+
 # RPATH for Unix
 if(UNIX)
     set_target_properties(principled_brdf_functions PROPERTIES INSTALL_RPATH "$ORIGIN")

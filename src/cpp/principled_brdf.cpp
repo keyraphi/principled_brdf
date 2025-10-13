@@ -97,8 +97,8 @@ OutputArrayCUDA principled_brdf_forward_cuda_impl(
 
 // CPU version with broadcasting and defaults
 OutputArrayCPU principled_brdf_forward_cpu(
-    FlexVec3CPU omega_i,
-    FlexVec3CPU omega_o,
+    Vec3ArrayCPU omega_i,
+    Vec3ArrayCPU omega_o,
     FlexVec3CPU P_b = FlexVec3CPU(),
     FlexScalarCPU P_m = FlexScalarCPU(),
     FlexScalarCPU P_ss = FlexScalarCPU(),
@@ -141,7 +141,7 @@ OutputArrayCPU principled_brdf_forward_cpu(
         cpu::broadcast_vec3(n, N) : cpu::create_default_vec3(N, 0.0f, 0.0f, 1.0f);
     
     return principled_brdf_forward_cpu_impl(
-        Vec3ArrayCPU(omega_i), Vec3ArrayCPU(omega_o),
+        omega_i, omega_o,
         P_b_final, P_m_final, P_ss_final, P_s_final,
         P_r_final, P_st_final, P_ani_final, P_sh_final,
         P_sht_final, P_c_final, P_cg_final, n_final
@@ -150,8 +150,8 @@ OutputArrayCPU principled_brdf_forward_cpu(
 
 // CUDA version with broadcasting and defaults
 OutputArrayCUDA principled_brdf_forward_cuda(
-    FlexVec3CUDA omega_i,
-    FlexVec3CUDA omega_o,
+    Vec3ArrayCUDA omega_i,
+    Vec3ArrayCUDA omega_o,
     FlexVec3CUDA P_b = FlexVec3CUDA(),
     FlexScalarCUDA P_m = FlexScalarCUDA(),
     FlexScalarCUDA P_ss = FlexScalarCUDA(),
@@ -260,8 +260,8 @@ NB_MODULE(principled_brdf_functions, m) {
     m.def("principled_brdf_forward", &principled_brdf_forward_cpu,
           "Compute the Principled BRDF on CPU\n\n"
           "Args:\n"
-          "    omega_i: Incoming light direction [N, 3] or [1, 3]\n"
-          "    omega_o: Outgoing view direction [N, 3] or [1, 3]\n"
+          "    omega_i: Incoming light direction [N, 3]\n"
+          "    omega_o: Outgoing view direction [N, 3]\n"
           "    basecolor: Base color [N, 3] or [1, 3] (default: [0.8, 0.8, 0.8])\n"
           "    metallic: Metallic [N] or [1] (default: 0.0)\n"
           "    subsurface: Subsurface [N] or [1] (default: 0.0)\n"
@@ -289,8 +289,8 @@ NB_MODULE(principled_brdf_functions, m) {
     m.def("principled_brdf_forward", &principled_brdf_forward_cuda,
           "Compute the Principled BRDF on CUDA\n\n"
           "Args:\n"
-          "    omega_i: Incoming light direction [N, 3] or [1, 3]\n"
-          "    omega_o: Outgoing view direction [N, 3] or [1, 3]\n"
+          "    omega_i: Incoming light direction [N, 3]\n"
+          "    omega_o: Outgoing view direction [N, 3]\n"
           "    basecolor: Base color [N, 3] or [1, 3] (default: [0.8, 0.8, 0.8])\n"
           "    metallic: Metallic [N] or [1] (default: 0.0)\n"
           "    subsurface: Subsurface [N] or [1] (default: 0.0)\n"
