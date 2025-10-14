@@ -78,7 +78,7 @@ OutputArrayCUDA principled_brdf_forward_cuda_impl(
 ) {
     size_t N = omega_i.shape(0);
     
-    float* result_data = static_cast<float*>(cuda_allocate(N * 3 * sizeof(float)));
+    float* result_data = static_cast<float*>(cuda::cuda_allocate(N * 3 * sizeof(float)));
     if (!result_data) {
         throw std::runtime_error("Failed to allocate CUDA memory for output");
     }
@@ -91,7 +91,7 @@ OutputArrayCUDA principled_brdf_forward_cuda_impl(
         result_data, N
     );
     
-    nb::capsule owner(result_data, [](void *p) noexcept { cuda_free(p); });
+    nb::capsule owner(result_data, [](void *p) noexcept { cuda::cuda_free(p); });
     return OutputArrayCUDA(result_data, {N, 3}, owner);
 }
 
@@ -229,7 +229,7 @@ nb::ndarray<float> dummy_add(const nb::ndarray<float> &a,
     return nb::ndarray<float>(result_data, 2, shape, owner);
   } else if (a.device_type() == nb::device::cuda::value) {
     // Allocate CUDA memory using our CUDA function
-    float *result_data = static_cast<float *>(cuda_allocate(n * sizeof(float)));
+    float *result_data = static_cast<float *>(cuda::cuda_allocate(n * sizeof(float)));
     if (!result_data) {
       throw std::runtime_error("Failed to allocate CUDA memory");
     }
@@ -240,7 +240,7 @@ nb::ndarray<float> dummy_add(const nb::ndarray<float> &a,
     cuda_dummy_add(a_data, b_data, result_data, n);
 
     // Create ndarray that takes ownership of the CUDA memory
-    nb::capsule owner(result_data, [](void *p) noexcept { cuda_free(p); });
+    nb::capsule owner(result_data, [](void *p) noexcept { cuda::cuda_free(p); });
 
     return nb::ndarray<float>(result_data, 2, shape, owner,
                               nullptr, // strides (nullptr = contiguous)

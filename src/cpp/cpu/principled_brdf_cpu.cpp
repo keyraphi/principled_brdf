@@ -161,14 +161,15 @@ inline float D_r(const Vec3 &H, const Vec3 &n, const float P_cg) {
   return (a2 - 1.f) / (M_PIf * std::log(a2) * (1.f + (a2 - 1) * nH * nH));
 }
 
-void principled_brdf_cpu_forward(const float *omega_i, const float *omega_o,
-                                 const float *P_b, const float *P_m,
-                                 const float *P_ss, const float *P_s,
-                                 const float *P_r, const float *P_st,
-                                 const float *P_ani, const float *P_sh,
-                                 const float *P_sht, const float *P_c,
-                                 const float *P_cg, const float *n,
-                                 float *result, size_t N) {
+void principled_brdf_cpu_forward(
+    const float *__restrict__ omega_i, const float *__restrict__ omega_o,
+    const float *__restrict__ P_b, const float *__restrict__ P_m,
+    const float *__restrict__ P_ss, const float *__restrict__ P_s,
+    const float *__restrict__ P_r, const float *__restrict__ P_st,
+    const float *__restrict__ P_ani, const float *__restrict__ P_sh,
+    const float *__restrict__ P_sht, const float *__restrict__ P_c,
+    const float *__restrict__ P_cg, const float *__restrict__ n,
+    float *__restrict__ result, size_t N) {
 #pragma omp parallel for
   for (size_t i = 0; i < N; ++i) {
     const Vec3 L(omega_i[i * 3], omega_i[i * 3 + 1], omega_i[i * 3 + 2]);
@@ -178,7 +179,6 @@ void principled_brdf_cpu_forward(const float *omega_i, const float *omega_o,
     Vec3 _n{n[i * 3], n[i * 3 + 1], n[i * 3 + 2]};
     Vec3 _P_b{P_b[i * 3], P_b[i * 3 + 1], P_b[i * 3 + 2]};
 
-    // TODO There is also a dependencie on L, V and H most of the time.
     Vec3 BRDF =
         (M_1_PIf *
              mix(F_d(V, L, H, _n, P_r[i]), ss(V, L, H, _n, P_r[i]), P_ss[i]) *
@@ -189,5 +189,9 @@ void principled_brdf_cpu_forward(const float *omega_i, const float *omega_o,
             F_s(L, H, _P_b, P_m[i], P_st[i], P_s[i]) *
             D_s(H, _n, P_ani[i], P_r[i]) +
         0.25f * P_c[i] * G_r(L, V, _n) * F_r(L, H) * D_r(H, _n, P_cg[i]);
+
+    result[i * 3] = BRDF.x;
+    result[i * 3 + 1] = BRDF.y;
+    result[i * 3 + 2] = BRDF.z;
   }
 }

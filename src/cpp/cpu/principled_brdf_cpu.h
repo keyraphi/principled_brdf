@@ -2,11 +2,12 @@
 
 #include <cstddef>
 
-void principled_brdf_cpu_forward(const float *omega_i, const float *omega_o,
-                                  const float *P_b, const float *P_m,
-                                  const float *P_ss, const float *P_s,
-                                  const float *P_r, const float *P_st,
-                                  const float *P_ani, const float *P_sh,
-                                  const float *P_sht, const float *P_c,
-                                  const float *P_cg, const float *n,
-                                  float *result, size_t N);
+void principled_brdf_cpu_forward(
+    const float *__restrict__ omega_i, const float *__restrict__ omega_o,
+    const float *__restrict__ P_b, const float *__restrict__ P_m,
+    const float *__restrict__ P_ss, const float *__restrict__ P_s,
+    const float *__restrict__ P_r, const float *__restrict__ P_st,
+    const float *__restrict__ P_ani, const float *__restrict__ P_sh,
+    const float *__restrict__ P_sht, const float *__restrict__ P_c,
+    const float *__restrict__ P_cg, const float *__restrict__ n,
+    float *__restrict__ result, size_t N);
