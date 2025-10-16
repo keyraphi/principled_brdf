@@ -1,6 +1,9 @@
-# Disney BRDF PyTorch Extension
+# Principled BRDF Implementation 
 
-A custom PyTorch operation implementing the Disney BRDF with automatic differentiation support.
+A C++ and CUDA implementation of the full Principled BRDF and all partial derivatives with python bindings.
+
+This can be used to easily create highly performant fully differentiable operations in any ML-Framework.
+A PyTorch Autograd function and Module is given as an example for the integration.
 
 ## Installation
 
@@ -11,3 +14,4 @@ chmod +x scripts/install_dependencies.sh
 
 # Build and install
 pip install -e .
+```
