@@ -1,4 +1,4 @@
-# Work in Progres!
+# Work in Progress!
 Do not use yet!
 # Principled BRDF Implementation 
 
