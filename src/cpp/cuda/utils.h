@@ -1,4 +1,5 @@
 #pragma once
+#include <cuda_runtime_api.h>
 #include <nanobind/nanobind.h>
 #include <nanobind/ndarray.h>
 
@@ -6,26 +7,85 @@ namespace nb = nanobind;
 
 namespace cuda {
 // Forward declarations
-using FlexScalarCUDA = nb::ndarray<const float, nb::shape<-1>, nb::c_contig, nb::device::cuda>;
-using FlexVec3CUDA = nb::ndarray<const float, nb::shape<-1, 3>, nb::c_contig, nb::device::cuda>;
-using ScalarArrayCUDA = nb::ndarray<const float, nb::shape<-1>, nb::c_contig, nb::device::cuda>;
-using Vec3ArrayCUDA = nb::ndarray<const float, nb::shape<-1, 3>, nb::c_contig, nb::device::cuda>;
+using FlexScalarCUDA =
+    nb::ndarray<const float, nb::shape<-1>, nb::c_contig, nb::device::cuda>;
+using FlexVec3CUDA =
+    nb::ndarray<const float, nb::shape<-1, 3>, nb::c_contig, nb::device::cuda>;
+using ScalarArrayCUDA =
+    nb::ndarray<const float, nb::shape<-1>, nb::c_contig, nb::device::cuda>;
+using Vec3ArrayCUDA =
+    nb::ndarray<const float, nb::shape<-1, 3>, nb::c_contig, nb::device::cuda>;
 
 // CUDA memory management functions
-extern "C" {
-    void* cuda_allocate(size_t n);
-    void cuda_free(void* ptr);
-    void cuda_broadcast_scalar(float* dst, float value, size_t N);
-    void cuda_broadcast_vec3(float* dst, const float* src, size_t N);
-}
+void *cuda_allocate(size_t n);
+void cuda_free(void *ptr);
 
+// make sure the given array gets the full shape. If no source is given the
+// default values are used
+ScalarArrayCUDA broadcast_scalar(const FlexScalarCUDA &source, size_t N,
+                                 float default_value);
+Vec3ArrayCUDA broadcast_vec3(const FlexVec3CUDA &source, size_t N,
+                             float default_x, float default_y, float default_z);
 
-// Create default arrays of size [N]
-Vec3ArrayCUDA create_default_vec3(size_t N, float x, float y, float z);
-ScalarArrayCUDA create_default_scalar(size_t N, float value);
+struct Vec3 {
+  float x, y, z;
 
-// Broadcast arrays from [1] to [N] or [1, 3] to [N, 3]
-ScalarArrayCUDA broadcast_scalar(const FlexScalarCUDA& source, size_t N);
-Vec3ArrayCUDA broadcast_vec3(const FlexVec3CUDA& source, size_t N);
+  // Constructor from individual components
+  __host__ __device__ Vec3(float x_, float y_, float z_)
+      : x{x_}, y{y_}, z{z_} {}
+
+  // Default constructor (initializes to zero)
+  __host__ __device__ Vec3() = default;
+
+  // Vector addition
+  __host__ __device__ Vec3 operator+(const Vec3 &rhs) const {
+    return Vec3(x + rhs.x, y + rhs.y, z + rhs.z);
+  }
+  __host__ __device__ Vec3 operator+(const float rhs) const {
+    return Vec3(x + rhs, y + rhs, z + rhs);
+  }
+  __host__ __device__ Vec3 operator-(const Vec3 &rhs) const {
+    return Vec3(x - rhs.x, y - rhs.y, z - rhs.z);
+  }
+
+  // Scalar multiplication (both directions)
+  __host__ __device__ Vec3 operator*(float scalar) const {
+    return Vec3(x * scalar, y * scalar, z * scalar);
+  }
+  __host__ __device__ friend Vec3 operator*(float scalar, const Vec3 &vec) {
+    return vec * scalar;
+  }
+
+  // Dot product (vector multiplication)
+  __host__ __device__ float operator*(const Vec3 &rhs) const {
+    return x * rhs.x + y * rhs.y + z * rhs.z;
+  }
+
+  // Scalar division
+  __host__ __device__ Vec3 operator/(float scalar) const {
+    return Vec3(x / scalar, y / scalar, z / scalar);
+  }
+
+  __host__ __device__ Vec3 operator^(float exponent) const {
+    return Vec3(powf(x, exponent), std::pow(y, exponent), powf(z, exponent));
+  }
+
+  // In-place normalization
+  __host__ __device__ Vec3 &normalize() {
+    float len = sqrtf(x * x + y * y + z * z);
+    if (len > 0) {
+      float inv_len = 1.f / len;
+      x *= inv_len;
+      y *= inv_len;
+      z *= inv_len;
+    }
+    return *this;
+  }
+
+  // Element-wise Hadamard product
+  __host__ __device__ Vec3 hadamard(const Vec3 &rhs) const {
+    return Vec3(x * rhs.x, y * rhs.y, z * rhs.z);
+  }
+};
 
 } // namespace cuda

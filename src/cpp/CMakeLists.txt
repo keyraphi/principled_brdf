@@ -13,8 +13,12 @@ FetchContent_MakeAvailable(nanobind)
 
 # Enable CUDA
 enable_language(CUDA)
-set(CUDA_ARCHITECTURES 75 80 86 89)
+#set(CUDA_ARCHITECTURES 52 61 70 75 80 86 89 90 100 103 120)
+set(CUDA_ARCHITECTURES 52) # TEMPORAYR for faster compilation
 set(CMAKE_CUDA_ARCHITECTURES ${CUDA_ARCHITECTURES})
+
+# Add common as a subdirectory
+add_subdirectory(common)
 
 # Single shared library for the Python extension
 nanobind_add_module(principled_brdf_functions
@@ -32,9 +36,17 @@ target_compile_options(principled_brdf_functions PRIVATE
 
 # Link dependencies
 target_link_libraries(principled_brdf_functions PRIVATE CUDA::cudart)
-
+# Link against common utilities
+target_link_libraries(principled_brdf_functions PRIVATE common_utils)
 # C++ standard
 target_compile_features(principled_brdf_functions PRIVATE cxx_std_17)
+target_compile_options(principled_brdf_functions PRIVATE
+    -Wall
+    -Wextra
+    $<$<COMPILE_LANGUAGE:CUDA>:-Xptxas="-v">
+)
+# for clangd
+target_include_directories(principled_brdf_functions PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 # use OpenMP in c++ implementation
 find_package(OpenMP)

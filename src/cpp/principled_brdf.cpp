@@ -2,12 +2,13 @@
 #include <nanobind/ndarray.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/vector.h>
+#include <cstddef>
+#include <stdexcept>
 
 #include "cpu/principled_brdf_cpu.h"
 #include "cpu/utils.h"
 #include "cuda/principled_brdf_cuda.h"
 #include "cuda/utils.h"
-
 namespace nb = nanobind;
 using namespace nb::literals;
 
@@ -28,22 +29,22 @@ using FlexScalarCUDA = nb::ndarray<const float, nb::shape<-1>, nb::c_contig, nb:
 using FlexVec3CUDA = nb::ndarray<const float, nb::shape<-1, 3>, nb::c_contig, nb::device::cuda>;
 
 // Low-level implementations (no broadcasting, exact shapes [N])
-OutputArrayCPU principled_brdf_forward_cpu_impl(
-    Vec3ArrayCPU omega_i,
-    Vec3ArrayCPU omega_o,
-    Vec3ArrayCPU P_b,
-    ScalarArrayCPU P_m,
-    ScalarArrayCPU P_ss,
-    ScalarArrayCPU P_s,
-    ScalarArrayCPU P_r,
-    ScalarArrayCPU P_st,
-    ScalarArrayCPU P_ani,
-    ScalarArrayCPU P_sh,
-    ScalarArrayCPU P_sht,
-    ScalarArrayCPU P_c,
-    ScalarArrayCPU P_cg,
-    Vec3ArrayCPU n
-) {
+auto principled_brdf_forward_cpu_impl(
+    const Vec3ArrayCPU &omega_i,
+    const Vec3ArrayCPU &omega_o,
+    const Vec3ArrayCPU &P_b,
+    const ScalarArrayCPU &P_m,
+    const ScalarArrayCPU &P_ss,
+    const ScalarArrayCPU &P_s,
+    const ScalarArrayCPU &P_r,
+    const ScalarArrayCPU &P_st,
+    const ScalarArrayCPU &P_ani,
+    const ScalarArrayCPU &P_sh,
+    const ScalarArrayCPU &P_sht,
+    const ScalarArrayCPU &P_c,
+    const ScalarArrayCPU &P_cg,
+    const Vec3ArrayCPU &n
+) -> OutputArrayCPU {
     size_t N = omega_i.shape(0);
     
     float* result_data = new float[N * 3];
@@ -56,25 +57,25 @@ OutputArrayCPU principled_brdf_forward_cpu_impl(
         result_data, N
     );
     
-    nb::capsule owner(result_data, [](void *p) noexcept { delete[] (float*)p; });
+    nb::capsule owner(result_data, [](void *ptr) noexcept { delete[] (float*)ptr; });
     return OutputArrayCPU(result_data, {N, 3}, owner);
 }
 
 OutputArrayCUDA principled_brdf_forward_cuda_impl(
-    Vec3ArrayCUDA omega_i,
-    Vec3ArrayCUDA omega_o,
-    Vec3ArrayCUDA P_b,
-    ScalarArrayCUDA P_m,
-    ScalarArrayCUDA P_ss,
-    ScalarArrayCUDA P_s,
-    ScalarArrayCUDA P_r,
-    ScalarArrayCUDA P_st,
-    ScalarArrayCUDA P_ani,
-    ScalarArrayCUDA P_sh,
-    ScalarArrayCUDA P_sht,
-    ScalarArrayCUDA P_c,
-    ScalarArrayCUDA P_cg,
-    Vec3ArrayCUDA n
+    const Vec3ArrayCUDA &omega_i,
+    const Vec3ArrayCUDA &omega_o,
+    const Vec3ArrayCUDA &P_b,
+    const ScalarArrayCUDA &P_m,
+    const ScalarArrayCUDA &P_ss,
+    const ScalarArrayCUDA &P_s,
+    const ScalarArrayCUDA &P_r,
+    const ScalarArrayCUDA &P_st,
+    const ScalarArrayCUDA &P_ani,
+    const ScalarArrayCUDA &P_sh,
+    const ScalarArrayCUDA &P_sht,
+    const ScalarArrayCUDA &P_c,
+    const ScalarArrayCUDA &P_cg,
+    const Vec3ArrayCUDA &n
 ) {
     size_t N = omega_i.shape(0);
     
@@ -97,20 +98,20 @@ OutputArrayCUDA principled_brdf_forward_cuda_impl(
 
 // CPU version with broadcasting and defaults
 OutputArrayCPU principled_brdf_forward_cpu(
-    Vec3ArrayCPU omega_i,
-    Vec3ArrayCPU omega_o,
-    FlexVec3CPU P_b = FlexVec3CPU(),
-    FlexScalarCPU P_m = FlexScalarCPU(),
-    FlexScalarCPU P_ss = FlexScalarCPU(),
-    FlexScalarCPU P_s = FlexScalarCPU(),
-    FlexScalarCPU P_r = FlexScalarCPU(),
-    FlexScalarCPU P_st = FlexScalarCPU(),
-    FlexScalarCPU P_ani = FlexScalarCPU(),
-    FlexScalarCPU P_sh = FlexScalarCPU(),
-    FlexScalarCPU P_sht = FlexScalarCPU(),
-    FlexScalarCPU P_c = FlexScalarCPU(),
-    FlexScalarCPU P_cg = FlexScalarCPU(),
-    FlexVec3CPU n = FlexVec3CPU()
+    const Vec3ArrayCPU &omega_i,
+    const Vec3ArrayCPU &omega_o,
+    const FlexVec3CPU &P_b = FlexVec3CPU(),
+    const FlexScalarCPU &P_m = FlexScalarCPU(),
+    const FlexScalarCPU &P_ss = FlexScalarCPU(),
+    const FlexScalarCPU &P_s = FlexScalarCPU(),
+    const FlexScalarCPU &P_r = FlexScalarCPU(),
+    const FlexScalarCPU &P_st = FlexScalarCPU(),
+    const FlexScalarCPU &P_ani = FlexScalarCPU(),
+    const FlexScalarCPU &P_sh = FlexScalarCPU(),
+    const FlexScalarCPU &P_sht = FlexScalarCPU(),
+    const FlexScalarCPU &P_c = FlexScalarCPU(),
+    const FlexScalarCPU &P_cg = FlexScalarCPU(),
+    const FlexVec3CPU &n = FlexVec3CPU()
 ) {
     size_t N = omega_i.shape(0);
     
@@ -150,48 +151,49 @@ OutputArrayCPU principled_brdf_forward_cpu(
 
 // CUDA version with broadcasting and defaults
 OutputArrayCUDA principled_brdf_forward_cuda(
-    Vec3ArrayCUDA omega_i,
-    Vec3ArrayCUDA omega_o,
-    FlexVec3CUDA P_b = FlexVec3CUDA(),
-    FlexScalarCUDA P_m = FlexScalarCUDA(),
-    FlexScalarCUDA P_ss = FlexScalarCUDA(),
-    FlexScalarCUDA P_s = FlexScalarCUDA(),
-    FlexScalarCUDA P_r = FlexScalarCUDA(),
-    FlexScalarCUDA P_st = FlexScalarCUDA(),
-    FlexScalarCUDA P_ani = FlexScalarCUDA(),
-    FlexScalarCUDA P_sh = FlexScalarCUDA(),
-    FlexScalarCUDA P_sht = FlexScalarCUDA(),
-    FlexScalarCUDA P_c = FlexScalarCUDA(),
-    FlexScalarCUDA P_cg = FlexScalarCUDA(),
-    FlexVec3CUDA n = FlexVec3CUDA()
+    const Vec3ArrayCUDA &omega_i,
+    const Vec3ArrayCUDA &omega_o,
+    const FlexVec3CUDA &P_b = FlexVec3CUDA(),
+    const FlexScalarCUDA &P_m = FlexScalarCUDA(),
+    const FlexScalarCUDA &P_ss = FlexScalarCUDA(),
+    const FlexScalarCUDA &P_s = FlexScalarCUDA(),
+    const FlexScalarCUDA &P_r = FlexScalarCUDA(),
+    const FlexScalarCUDA &P_st = FlexScalarCUDA(),
+    const FlexScalarCUDA &P_ani = FlexScalarCUDA(),
+    const FlexScalarCUDA &P_sh = FlexScalarCUDA(),
+    const FlexScalarCUDA &P_sht = FlexScalarCUDA(),
+    const FlexScalarCUDA &P_c = FlexScalarCUDA(),
+    const FlexScalarCUDA &P_cg = FlexScalarCUDA(),
+    const FlexVec3CUDA &n = FlexVec3CUDA()
 ) {
     size_t N = omega_i.shape(0);
     
+    // TODO this here is doing double work - fix that.
     // Create defaults if needed using CUDA utilities
-    Vec3ArrayCUDA P_b_final = P_b.size() > 0 ? 
-        cuda::broadcast_vec3(P_b, N) : cuda::create_default_vec3(N, 0.8f, 0.8f, 0.8f);
-    ScalarArrayCUDA P_m_final = P_m.size() > 0 ? 
-        cuda::broadcast_scalar(P_m, N) : cuda::create_default_scalar(N, 0.0f);
-    ScalarArrayCUDA P_ss_final = P_ss.size() > 0 ? 
-        cuda::broadcast_scalar(P_ss, N) : cuda::create_default_scalar(N, 0.0f);
-    ScalarArrayCUDA P_s_final = P_s.size() > 0 ? 
-        cuda::broadcast_scalar(P_s, N) : cuda::create_default_scalar(N, 0.5f);
-    ScalarArrayCUDA P_r_final = P_r.size() > 0 ? 
-        cuda::broadcast_scalar(P_r, N) : cuda::create_default_scalar(N, 0.5f);
-    ScalarArrayCUDA P_st_final = P_st.size() > 0 ? 
-        cuda::broadcast_scalar(P_st, N) : cuda::create_default_scalar(N, 0.0f);
-    ScalarArrayCUDA P_ani_final = P_ani.size() > 0 ? 
-        cuda::broadcast_scalar(P_ani, N) : cuda::create_default_scalar(N, 0.0f);
-    ScalarArrayCUDA P_sh_final = P_sh.size() > 0 ? 
-        cuda::broadcast_scalar(P_sh, N) : cuda::create_default_scalar(N, 0.0f);
-    ScalarArrayCUDA P_sht_final = P_sht.size() > 0 ? 
-        cuda::broadcast_scalar(P_sht, N) : cuda::create_default_scalar(N, 0.5f);
-    ScalarArrayCUDA P_c_final = P_c.size() > 0 ? 
-        cuda::broadcast_scalar(P_c, N) : cuda::create_default_scalar(N, 0.0f);
-    ScalarArrayCUDA P_cg_final = P_cg.size() > 0 ? 
-        cuda::broadcast_scalar(P_cg, N) : cuda::create_default_scalar(N, 1.0f);
-    Vec3ArrayCUDA n_final = n.size() > 0 ? 
-        cuda::broadcast_vec3(n, N) : cuda::create_default_vec3(N, 0.0f, 0.0f, 1.0f);
+    Vec3ArrayCUDA P_b_final = 
+        cuda::broadcast_vec3(P_b, N, 0.8f, 0.8f, 0.8f);
+    ScalarArrayCUDA P_m_final = 
+        cuda::broadcast_scalar(P_m, N, 0.0f);
+    ScalarArrayCUDA P_ss_final =
+        cuda::broadcast_scalar(P_ss, N, 0.0f);
+    ScalarArrayCUDA P_s_final =
+        cuda::broadcast_scalar(P_s, N, 0.5f);
+    ScalarArrayCUDA P_r_final =
+        cuda::broadcast_scalar(P_r, N, 0.5f);
+    ScalarArrayCUDA P_st_final =
+        cuda::broadcast_scalar(P_st, N, 0.0f);
+    ScalarArrayCUDA P_ani_final =
+        cuda::broadcast_scalar(P_ani, N, 0.0f);
+    ScalarArrayCUDA P_sh_final =
+        cuda::broadcast_scalar(P_sh, N, 0.0f);
+    ScalarArrayCUDA P_sht_final =
+        cuda::broadcast_scalar(P_sht, N, 0.5f);
+    ScalarArrayCUDA P_c_final = 
+        cuda::broadcast_scalar(P_c, N, 0.0f);
+    ScalarArrayCUDA P_cg_final =
+        cuda::broadcast_scalar(P_cg, N, 1.0f);
+    Vec3ArrayCUDA n_final =
+        cuda::broadcast_vec3(n, N, 0.0f, 0.0f, 1.0f);
     
     return principled_brdf_forward_cuda_impl(
         Vec3ArrayCUDA(omega_i), Vec3ArrayCUDA(omega_o),
@@ -227,9 +229,10 @@ nb::ndarray<float> dummy_add(const nb::ndarray<float> &a,
                       [](void *p) noexcept { delete[] (float *)p; });
 
     return nb::ndarray<float>(result_data, 2, shape, owner);
-  } else if (a.device_type() == nb::device::cuda::value) {
+  } 
+  if (a.device_type() == nb::device::cuda::value) {
     // Allocate CUDA memory using our CUDA function
-    float *result_data = static_cast<float *>(cuda::cuda_allocate(n * sizeof(float)));
+    auto *result_data = static_cast<float *>(cuda::cuda_allocate(n * sizeof(float)));
     if (!result_data) {
       throw std::runtime_error("Failed to allocate CUDA memory");
     }
@@ -246,9 +249,8 @@ nb::ndarray<float> dummy_add(const nb::ndarray<float> &a,
                               nullptr, // strides (nullptr = contiguous)
                               nb::dtype<float>(), nb::device::cuda::value,
                               a.device_id());
-  } else {
-    throw std::runtime_error("Unsupported device type");
-  }
+  } 
+  throw std::runtime_error("Unsupported device type");
 }
 
 NB_MODULE(principled_brdf_functions, m) {
@@ -258,7 +260,8 @@ NB_MODULE(principled_brdf_functions, m) {
     
     // Two separate overloads - nanobind will automatically dispatch based on device type
     m.def("principled_brdf_forward", &principled_brdf_forward_cpu,
-          "Compute the Principled BRDF on CPU\n\n"
+          "CPU implementatio of the Principled BRDF forward pass.\n\n"
+          "This is used when all arguments are on cpu.\n"
           "Args:\n"
           "    omega_i: Incoming light direction [N, 3]\n"
           "    omega_o: Outgoing view direction [N, 3]\n"
@@ -287,7 +290,8 @@ NB_MODULE(principled_brdf_functions, m) {
     );
     
     m.def("principled_brdf_forward", &principled_brdf_forward_cuda,
-          "Compute the Principled BRDF on CUDA\n\n"
+          "GPU implementatio of the Principled BRDF forward pass.\n\n"
+          "This is used when all arguments are on gpu.\n"
           "Args:\n"
           "    omega_i: Incoming light direction [N, 3]\n"
           "    omega_o: Outgoing view direction [N, 3]\n"
