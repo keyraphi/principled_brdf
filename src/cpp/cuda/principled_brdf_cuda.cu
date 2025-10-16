@@ -9,37 +9,6 @@
 
 #define N_THREADS 256
 
-// CUDA kernel
-__global__ void add_cuda_kernel(const float *a, const float *b, float *c,
-                                size_t n) {
-  size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
-  if (idx < n) {
-    c[idx] = a[idx] + b[idx];
-  }
-}
-
-// CUDA dummy add implementation
-extern "C" void cuda_dummy_add(const float *a, const float *b, float *result,
-                               size_t n) {
-  // Launch kernel
-  add_cuda_kernel<<<(n + 255) / 256, 256>>>(a, b, result, n);
-
-  // Synchronize and check for errors
-  cudaError_t err = cudaDeviceSynchronize();
-  if (err != cudaSuccess) {
-    // Clean up on error
-    cudaFree(result);
-    throw std::runtime_error("CUDA kernel execution failed");
-  }
-
-  // Check for kernel launch errors
-  err = cudaGetLastError();
-  if (err != cudaSuccess) {
-    cudaFree(result);
-    throw std::runtime_error("CUDA kernel launch failed");
-  }
-}
-
 __global__ void principled_brdf_forward_kernel(
     const float *__restrict__ omega_i_, const float *__restrict__ omega_o_,
     const float *__restrict__ P_b_, const float *__restrict__ P_m_,
@@ -113,7 +82,7 @@ __global__ void principled_brdf_forward_kernel(
   result[(3 * global_id) + 2] = BRDF.z;
 }
 
-extern "C" void principled_brdf_cuda_forward(
+extern "C" void principled_brdf_forward_cuda_impl(
     const float *__restrict__ omega_i, const float *__restrict__ omega_o,
     const float *__restrict__ P_b, const float *__restrict__ P_m,
     const float *__restrict__ P_ss, const float *__restrict__ P_s,

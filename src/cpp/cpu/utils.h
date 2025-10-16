@@ -1,5 +1,6 @@
 #pragma once
 #include <cmath>
+#include <cstddef>
 #include <nanobind/nanobind.h>
 #include <nanobind/ndarray.h>
 
@@ -17,13 +18,30 @@ using Vec3ArrayCPU =
 
 namespace cpu {
 
-// Create default arrays of size [N]
-Vec3ArrayCPU create_default_vec3(size_t N, float x, float y, float z);
-ScalarArrayCPU create_default_scalar(size_t N, float value);
-
 // Broadcast arrays from [1] to [N] or [1, 3] to [N, 3]
-ScalarArrayCPU broadcast_scalar(const FlexScalarCPU &source, size_t N);
-Vec3ArrayCPU broadcast_vec3(const FlexVec3CPU &source, size_t N);
+auto broadcast_scalar(const FlexScalarCPU &source, size_t N, float default_value)
+    -> ScalarArrayCPU;
+auto broadcast_vec3(const FlexVec3CPU &source, size_t N, float default_x,
+                    float default_y, float default_z) -> Vec3ArrayCPU;
+
+struct BRDFInputs {
+  size_t N;
+
+  Vec3ArrayCPU omega_i;
+  Vec3ArrayCPU omega_o;
+  Vec3ArrayCPU P_b;
+  ScalarArrayCPU P_m;
+  ScalarArrayCPU P_ss;
+  ScalarArrayCPU P_s;
+  ScalarArrayCPU P_r;
+  ScalarArrayCPU P_st;
+  ScalarArrayCPU P_ani;
+  ScalarArrayCPU P_sh;
+  ScalarArrayCPU P_sht;
+  ScalarArrayCPU P_c;
+  ScalarArrayCPU P_cg;
+  Vec3ArrayCPU n;
+};
 
 struct Vec3 {
   float x, y, z;

@@ -45,7 +45,7 @@ ScalarArrayCUDA broadcast_scalar(const FlexScalarCUDA& source, size_t N, float d
 
 Vec3ArrayCUDA broadcast_vec3(const FlexVec3CUDA& source, size_t N, float default_x, float default_y, float default_z) {
     if (source.shape(0) == N) {
-        return Vec3ArrayCUDA(source);
+        return Vec3ArrayCUDA{source};
     }
     float3 default_value{default_x, default_y, default_z};
     if (source.shape(0) == 1) {

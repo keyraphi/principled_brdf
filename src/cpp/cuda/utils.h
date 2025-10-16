@@ -1,4 +1,5 @@
 #pragma once
+#include <cstddef>
 #include <cuda_runtime_api.h>
 #include <nanobind/nanobind.h>
 #include <nanobind/ndarray.h>
@@ -26,6 +27,25 @@ ScalarArrayCUDA broadcast_scalar(const FlexScalarCUDA &source, size_t N,
                                  float default_value);
 Vec3ArrayCUDA broadcast_vec3(const FlexVec3CUDA &source, size_t N,
                              float default_x, float default_y, float default_z);
+
+struct __attribute__((visibility("default"))) BRDFInputs {
+  size_t N;
+
+  Vec3ArrayCUDA omega_i;
+  Vec3ArrayCUDA omega_o;
+  Vec3ArrayCUDA P_b;
+  ScalarArrayCUDA P_m;
+  ScalarArrayCUDA P_ss;
+  ScalarArrayCUDA P_s;
+  ScalarArrayCUDA P_r;
+  ScalarArrayCUDA P_st;
+  ScalarArrayCUDA P_ani;
+  ScalarArrayCUDA P_sh;
+  ScalarArrayCUDA P_sht;
+  ScalarArrayCUDA P_c;
+  ScalarArrayCUDA P_cg;
+  Vec3ArrayCUDA n;
+};
 
 struct Vec3 {
   float x, y, z;
