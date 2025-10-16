@@ -253,69 +253,70 @@ nb::ndarray<float> dummy_add(const nb::ndarray<float> &a,
   throw std::runtime_error("Unsupported device type");
 }
 
-NB_MODULE(principled_brdf_functions, m) {
-    m.doc() = "Raw Principled BRDF functions with partial derivatives (C++/CUDA implementation)";
-    
-    m.def("dummy_add", &dummy_add, "Add two arrays");
-    
-    // Two separate overloads - nanobind will automatically dispatch based on device type
-    m.def("principled_brdf_forward", &principled_brdf_forward_cpu,
-          "CPU implementatio of the Principled BRDF forward pass.\n\n"
-          "This is used when all arguments are on cpu.\n"
-          "Args:\n"
-          "    omega_i: Incoming light direction [N, 3]\n"
-          "    omega_o: Outgoing view direction [N, 3]\n"
-          "    basecolor: Base color [N, 3] or [1, 3] (default: [0.8, 0.8, 0.8])\n"
-          "    metallic: Metallic [N] or [1] (default: 0.0)\n"
-          "    subsurface: Subsurface [N] or [1] (default: 0.0)\n"
-          "    specular: Specular [N] or [1] (default: 0.5)\n"
-          "    roughness: Roughness [N] or [1] (default: 0.5)\n"
-          "    specular_tint: Specular tint [N] or [1] (default: 0.0)\n"
-          "    anisotropy: Anisotropic [N] or [1] (default: 0.0)\n"
-          "    sheen: Sheen [N] or [1] (default: 0.0)\n"
-          "    sheen_tint: Sheen tint [N] or [1] (default: 0.5)\n"
-          "    clearcoat: Clearcoat [N] or [1] (default: 0.0)\n"
-          "    clearcoat_gloss: Clearcoat gloss [N] or [1] (default: 1.0)\n"
-          "    normal: Surface normal [N, 3] or [1, 3] (default: [0, 0, 1])\n\n"
-          "Returns:\n"
-          "    BRDF value in rgb [N, 3]",
-          "omega_i"_a, "omega_o"_a,
-          nb::kw_only(),
-          "basecolor"_a = FlexVec3CPU(), "metallic"_a = FlexScalarCPU(),
-          "subsurface"_a = FlexScalarCPU(), "specular"_a = FlexScalarCPU(),
-          "roughness"_a = FlexScalarCPU(), "specular_tint"_a = FlexScalarCPU(),
-          "anisotropy"_a = FlexScalarCPU(), "sheen"_a = FlexScalarCPU(),
-          "sheen_tint"_a = FlexScalarCPU(), "clearcoat"_a = FlexScalarCPU(),
-          "clearcoat_gloss"_a = FlexScalarCPU(), "normal"_a = FlexVec3CPU()
-    );
-    
-    m.def("principled_brdf_forward", &principled_brdf_forward_cuda,
-          "GPU implementatio of the Principled BRDF forward pass.\n\n"
-          "This is used when all arguments are on gpu.\n"
-          "Args:\n"
-          "    omega_i: Incoming light direction [N, 3]\n"
-          "    omega_o: Outgoing view direction [N, 3]\n"
-          "    basecolor: Base color [N, 3] or [1, 3] (default: [0.8, 0.8, 0.8])\n"
-          "    metallic: Metallic [N] or [1] (default: 0.0)\n"
-          "    subsurface: Subsurface [N] or [1] (default: 0.0)\n"
-          "    specular: Specular [N] or [1] (default: 0.5)\n"
-          "    roughness: Roughness [N] or [1] (default: 0.5)\n"
-          "    specular_tint: Specular tint [N] or [1] (default: 0.0)\n"
-          "    anisotropy: Anisotropic [N] or [1] (default: 0.0)\n"
-          "    sheen: Sheen [N] or [1] (default: 0.0)\n"
-          "    sheen_tint: Sheen tint [N] or [1] (default: 0.5)\n"
-          "    clearcoat: Clearcoat [N] or [1] (default: 0.0)\n"
-          "    clearcoat_gloss: Clearcoat gloss [N] or [1] (default: 1.0)\n"
-          "    normal: Surface normal [N, 3] or [1, 3] (default: [0, 0, 1])\n\n"
-          "Returns:\n"
-          "    BRDF value in rgb [N, 3]",
-          "omega_i"_a, "omega_o"_a,
-          nb::kw_only(),
-          "basecolor"_a = FlexVec3CUDA(), "metallic"_a = FlexScalarCUDA(),
-          "subsurface"_a = FlexScalarCUDA(), "specular"_a = FlexScalarCUDA(),
-          "roughness"_a = FlexScalarCUDA(), "specular_tint"_a = FlexScalarCUDA(),
-          "anisotropy"_a = FlexScalarCUDA(), "sheen"_a = FlexScalarCUDA(),
-          "sheen_tint"_a = FlexScalarCUDA(), "clearcoat"_a = FlexScalarCUDA(),
-          "clearcoat_gloss"_a = FlexScalarCUDA(), "normal"_a = FlexVec3CUDA()
-    );
+NB_MODULE(principled_brdf_functions, module) {
+  module.doc() = "Raw Principled BRDF functions with containing functions for "
+                 "forward pass and partial derivatives wrt. all parameters and "
+                 "normals as fused kernel.";
+
+  module.def("dummy_add", &dummy_add, "Add two arrays");
+
+  // Two separate overloads - nanobind will automatically dispatch based on
+  // device type
+  module.def(
+      "principled_brdf_forward", &principled_brdf_forward_cpu,
+      "CPU implementatio of the Principled BRDF forward pass.\n\n"
+      "This is used when all arguments are on cpu.\n"
+      "Args:\n"
+      "    omega_i: Incoming light direction [N, 3]\n"
+      "    omega_o: Outgoing view direction [N, 3]\n"
+      "    basecolor: Base color [N, 3] or [1, 3] (default: [0.8, 0.8, 0.8])\n"
+      "    metallic: Metallic [N] or [1] (default: 0.0)\n"
+      "    subsurface: Subsurface [N] or [1] (default: 0.0)\n"
+      "    specular: Specular [N] or [1] (default: 0.5)\n"
+      "    roughness: Roughness [N] or [1] (default: 0.5)\n"
+      "    specular_tint: Specular tint [N] or [1] (default: 0.0)\n"
+      "    anisotropy: Anisotropic [N] or [1] (default: 0.0)\n"
+      "    sheen: Sheen [N] or [1] (default: 0.0)\n"
+      "    sheen_tint: Sheen tint [N] or [1] (default: 0.5)\n"
+      "    clearcoat: Clearcoat [N] or [1] (default: 0.0)\n"
+      "    clearcoat_gloss: Clearcoat gloss [N] or [1] (default: 1.0)\n"
+      "    normal: Surface normal [N, 3] or [1, 3] (default: [0, 0, 1])\n\n"
+      "Returns:\n"
+      "    BRDF value in rgb [N, 3]",
+      "omega_i"_a, "omega_o"_a, nb::kw_only(), "basecolor"_a = FlexVec3CPU(),
+      "metallic"_a = FlexScalarCPU(), "subsurface"_a = FlexScalarCPU(),
+      "specular"_a = FlexScalarCPU(), "roughness"_a = FlexScalarCPU(),
+      "specular_tint"_a = FlexScalarCPU(), "anisotropy"_a = FlexScalarCPU(),
+      "sheen"_a = FlexScalarCPU(), "sheen_tint"_a = FlexScalarCPU(),
+      "clearcoat"_a = FlexScalarCPU(), "clearcoat_gloss"_a = FlexScalarCPU(),
+      "normal"_a = FlexVec3CPU());
+
+  module.def(
+      "principled_brdf_forward", &principled_brdf_forward_cuda,
+      "GPU implementatio of the Principled BRDF forward pass.\n\n"
+      "This is used when all arguments are on gpu.\n"
+      "Args:\n"
+      "    omega_i: Incoming light direction [N, 3]\n"
+      "    omega_o: Outgoing view direction [N, 3]\n"
+      "    basecolor: Base color [N, 3] or [1, 3] (default: [0.8, 0.8, 0.8])\n"
+      "    metallic: Metallic [N] or [1] (default: 0.0)\n"
+      "    subsurface: Subsurface [N] or [1] (default: 0.0)\n"
+      "    specular: Specular [N] or [1] (default: 0.5)\n"
+      "    roughness: Roughness [N] or [1] (default: 0.5)\n"
+      "    specular_tint: Specular tint [N] or [1] (default: 0.0)\n"
+      "    anisotropy: Anisotropic [N] or [1] (default: 0.0)\n"
+      "    sheen: Sheen [N] or [1] (default: 0.0)\n"
+      "    sheen_tint: Sheen tint [N] or [1] (default: 0.5)\n"
+      "    clearcoat: Clearcoat [N] or [1] (default: 0.0)\n"
+      "    clearcoat_gloss: Clearcoat gloss [N] or [1] (default: 1.0)\n"
+      "    normal: Surface normal [N, 3] or [1, 3] (default: [0, 0, 1])\n\n"
+      "Returns:\n"
+      "    BRDF value in rgb [N, 3]",
+      "omega_i"_a, "omega_o"_a, nb::kw_only(), "basecolor"_a = FlexVec3CUDA(),
+      "metallic"_a = FlexScalarCUDA(), "subsurface"_a = FlexScalarCUDA(),
+      "specular"_a = FlexScalarCUDA(), "roughness"_a = FlexScalarCUDA(),
+      "specular_tint"_a = FlexScalarCUDA(), "anisotropy"_a = FlexScalarCUDA(),
+      "sheen"_a = FlexScalarCUDA(), "sheen_tint"_a = FlexScalarCUDA(),
+      "clearcoat"_a = FlexScalarCUDA(), "clearcoat_gloss"_a = FlexScalarCUDA(),
+      "normal"_a = FlexVec3CUDA());
 }

@@ -3,7 +3,6 @@
 #include <cstddef>
 #include <math.h>
 
-
 void principled_brdf_cpu_forward(
     const float *__restrict__ omega_i, const float *__restrict__ omega_o,
     const float *__restrict__ P_b, const float *__restrict__ P_m,
