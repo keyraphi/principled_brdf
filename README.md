@@ -1,3 +1,5 @@
+# Work in Progres!
+Do not use yet!
 # Principled BRDF Implementation 
 
 A C++ and CUDA implementation of the full Principled BRDF and all partial derivatives with python bindings.
