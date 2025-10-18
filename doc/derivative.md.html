@@ -202,17 +202,17 @@ the basecolor based on the sheenTint.
 $C_{tint}$ represents the pure color of the basecolor. It is optained by
 dividing by the luminance.
 \begin{equation}
-\mathbf{C_{tint}} = \begin{cases} \frac{\mathbf{C_{dlin}}}{C_{dlum}} & \text{if} & C_{dlum} > 0\\
+\mathbf{C_{tint}} = \begin{cases} \frac{\mathbf{C_{dlin}}}{C_{lum}} & \text{if} & C_{lum} > 0\\
 \mathbf{1} & else
 \end{cases}
 \end{equation}
 
 **Depends on:** $\mathbf{P_b}$
 
-### $C_{dlum}(\mathbf{P_b})$
-$C_{dlum}$ is the approximated luminance of the baseColor.
+### $C_{lum}(\mathbf{P_b})$
+$C_{lum}$ is the approximated luminance of the baseColor.
 \begin{equation}
-C_{dlum} = \mathbf{C_{dlin}} \cdot \begin{pmatrix} 0.3\\0.6\\0.1\end{pmatrix}
+C_{lum} = \mathbf{C_{dlin}} \cdot \begin{pmatrix} 0.3\\0.6\\0.1\end{pmatrix}
 \end{equation}
 
 **Depends on:** $\mathbf{P_b}$
@@ -462,15 +462,13 @@ C_{dlum} -
 \frac{\partial}{\partial\mathbf{P_b}}\left(\mathbf{C_{dlin}} \cdot
 \begin{pmatrix}0.3\\0.6\\0.1\end{pmatrix}\right)\\
 &= 
-\begin{pmatrix}0.3\\0.6\\0.1\end{pmatrix}\frac{\partial}{\partial\mathbf{P_b}}\mathbf{C_{dlin}}\\
+\begin{pmatrix}0.3&0.6&0.1\end{pmatrix}\frac{\partial}{\partial\mathbf{P_b}}\mathbf{C_{dlin}}\\
 &= 
-\begin{pmatrix}0.3\\0.6\\0.1\end{pmatrix}\frac{\partial}{\partial\mathbf{P_b}}
+\begin{pmatrix}0.3&0.6&0.1\end{pmatrix}\frac{\partial}{\partial\mathbf{P_b}}
 \left[\mathbf{P_b}^{2.2}\right]\\
 &= 
-2.2\cdot\left[\begin{pmatrix}0.3\\0.6\\0.1\end{pmatrix}\odot\mathbf{P_b}^{1.2}\right]
+2.2\cdot\left[\begin{pmatrix}0.3&0.6&0.1\end{pmatrix}\cdot\mathbf{P_b}^{1.2}\right]
 \end{align}
-!!! Note
-    $\odot$ represents the Hadamard product.
 
 
 ### $\frac{\partial}{\partial\mathbf{P_b}}\mathbf{F_{s}}$
@@ -492,18 +490,18 @@ F_H \cdot \frac{\partial}{\partial\mathbf{P_b}} \mathbf{C_{spec0}}\\
 P_m)\\
 &=\frac{\partial}{\partial\mathbf{P_b}}
 \left(P_s\cdot 0.08 \cdot (\mathbf{1} + P_{st} (\mathbf{C_{tint}} - \mathbf{1}))
-+ P_M (\mathbf{C_{dlin}} - P_s\cdot 0.08 \cdot (\mathbf{1} + P_{st}
++ P_m (\mathbf{C_{dlin}} - P_s\cdot 0.08 \cdot (\mathbf{1} + P_{st}
 (\mathbf{C_{tint}} - \mathbf{1}))) \right)\\
 &=\frac{\partial}{\partial\mathbf{P_b}}\left(
 P_s\cdot 0.08 \cdot P_{st} \cdot \mathbf{C_{tint}}\right)
-+ \frac{\partial}{\partial\mathbf{P_b}} \left(P_M \cdot \mathbf{C_{dlin}}
++ \frac{\partial}{\partial\mathbf{P_b}} \left(P_m \cdot \mathbf{C_{dlin}}
 \right)
-- \frac{\partial}{\partial\mathbf{P_b}} \left(P_M\cdot P_s\cdot 0.08 \cdot P_{st}
+- \frac{\partial}{\partial\mathbf{P_b}} \left(P_m\cdot P_s\cdot 0.08 \cdot P_{st}
 \cdot \mathbf{C_{tint}}\right)\\
 &=
 P_s\cdot 0.08 \cdot P_{st} \cdot \frac{\partial}{\partial\mathbf{P_b}}\mathbf{C_{tint}}
-+ P_M \cdot \frac{\partial}{\partial\mathbf{P_b}} \mathbf{C_{dlin}}
-- P_M\cdot P_s\cdot 0.08 \cdot P_{st}
++ P_m \cdot \frac{\partial}{\partial\mathbf{P_b}} \mathbf{C_{dlin}}
+- P_m\cdot P_s\cdot 0.08 \cdot P_{st}
 \cdot \frac{\partial}{\partial\mathbf{P_b}} \mathbf{C_{tint}}
 \end{align}
 
