@@ -252,8 +252,8 @@ HOST_DEVICE inline float F_ss(const Vec3 &V, const Vec3 &L, const Vec3 &H,
 
 HOST_DEVICE inline float ss(const Vec3 &V, const Vec3 &L, const Vec3 &H,
                             const Vec3 &n, const float P_r) {
-  return 1.25F * (F_ss(V, L, H, n, P_r) * (1.F / (std::max(10e-6F, n * L) +
-                                                  std::max(10e-6F, n * V)) -
+  return 1.25F * (F_ss(V, L, H, n, P_r) * (1.F / (fmaxf(10e-6F, n * L) +
+                                                  fmaxf(10e-6F, n * V)) -
                                            0.5F) +
                   0.5F);
 }
@@ -291,7 +291,7 @@ HOST_DEVICE inline Vec3 F_sheen(const Vec3 &L, const Vec3 &H, const Vec3 &P_b,
 HOST_DEVICE inline float smithG(const float NV, const float VX, const float VY,
                                 const float ax, const float ay) {
   if (NV >= 0) {
-    return 1.F / (NV + std::sqrt((VX * ax) * (VX * ax) + (VY * ay) * (VY * ay) +
+    return 1.F / (NV + sqrtf((VX * ax) * (VX * ax) + (VY * ay) * (VY * ay) +
                                  NV * NV));
   } else {
     return 0.F;
@@ -299,15 +299,15 @@ HOST_DEVICE inline float smithG(const float NV, const float VX, const float VY,
 }
 
 HOST_DEVICE inline float aspect(const float P_ani) {
-  return std::sqrt(1.F - P_ani * 0.9);
+  return sqrtf(1.F - P_ani * 0.9);
 }
 
 HOST_DEVICE inline float a_x(const float P_ani, const float P_r) {
-  return std::max(0.001F, P_r * P_r / aspect(P_ani));
+  return fmaxf(0.001F, P_r * P_r / aspect(P_ani));
 }
 
 HOST_DEVICE inline float a_y(const float P_ani, const float P_r) {
-  return std::max(0.001F, P_r * P_r * aspect(P_ani));
+  return fmaxf(0.001F, P_r * P_r * aspect(P_ani));
 }
 
 HOST_DEVICE inline float G_s(const Vec3 &L, const Vec3 &V, const Vec3 &n,
@@ -352,7 +352,7 @@ HOST_DEVICE inline float smithGTR(const float NX) {
   if (NX <= 0)
     return 0.F;
   return 1.F /
-         (NX + std::sqrt(0.25f * 0.25f + NX * NX - 0.25 * 0.25 * NX * NX));
+         (NX + sqrtf(0.25f * 0.25f + NX * NX - 0.25 * 0.25 * NX * NX));
 }
 HOST_DEVICE inline float G_r(const Vec3 &L, const Vec3 &V, const Vec3 &n) {
   return smithGTR(n * L) * smithGTR(n * V);
@@ -372,7 +372,7 @@ HOST_DEVICE inline float a_2(const float P_cg) {
 HOST_DEVICE inline float D_r(const Vec3 &H, const Vec3 &n, const float P_cg) {
   float a2 = a_2(P_cg);
   float nH = n * H;
-  return (a2 - 1.F) / (M_PIf * std::log(a2) * (1.F + (a2 - 1) * nH * nH));
+  return (a2 - 1.F) / (M_PIf * logf(a2) * (1.F + (a2 - 1) * nH * nH));
 }
 
 // dBRDF_dP_b
@@ -417,5 +417,5 @@ HOST_DEVICE inline Mat3x3 dC_spec0_dP_b(const Vec3 &P_b, const float P_s,
 HOST_DEVICE inline Mat3x3 dF_s_dP_b(const Vec3 &L, const Vec3 &H,
                                     const Vec3 &P_b, const float P_s,
                                     const float P_st, const float P_m) {
-  return (1.F - F_H(L, H)) * dC_spec0_dP_b(P_b, P_m, P_st, P_s);
+  return (1.F - F_H(L, H)) * dC_spec0_dP_b(P_b, P_s, P_st, P_m);
 }

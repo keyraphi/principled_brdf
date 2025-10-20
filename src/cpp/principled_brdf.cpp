@@ -18,6 +18,8 @@ using ScalarArrayCPU =
     nb::ndarray<const float, nb::shape<-1>, nb::c_contig, nb::device::cpu>;
 using OutputArrayCPU =
     nb::ndarray<float, nb::shape<-1, 3>, nb::c_contig, nb::device::cpu>;
+using JacobiOutputArrayCPU =
+    nb::ndarray<float, nb::shape<-1, 3, 3>, nb::c_contig, nb::device::cpu>;
 
 using Vec3ArrayCUDA =
     nb::ndarray<const float, nb::shape<-1, 3>, nb::c_contig, nb::device::cuda>;
@@ -25,6 +27,8 @@ using ScalarArrayCUDA =
     nb::ndarray<const float, nb::shape<-1>, nb::c_contig, nb::device::cuda>;
 using OutputArrayCUDA =
     nb::ndarray<float, nb::shape<-1, 3>, nb::c_contig, nb::device::cuda>;
+using JacobiOutputArrayCUDA =
+    nb::ndarray<float, nb::shape<-1, 3, 3>, nb::c_contig, nb::device::cuda>;
 
 // Flexible input types that allow [1] or [N]
 using FlexScalarCPU =
@@ -158,6 +162,12 @@ auto principled_brdf_forward_cuda(
     const FlexScalarCUDA &P_cg = FlexScalarCUDA(),
     const FlexVec3CUDA &n = FlexVec3CUDA()) -> OutputArrayCUDA {
 
+  // Ensure that correct gpu is used for computation
+  int target_device =
+      cuda::get_common_cuda_device(omega_i, &omega_o, P_b, P_m, P_ss, P_s, P_r,
+                                   P_st, P_ani, P_sh, P_sht, P_c, P_cg, n);
+  cuda::ScopedCudaDevice device(target_device);
+
   cuda::BRDFInputs params =
       inputs_with_defaults(omega_i, omega_o, P_b, P_m, P_ss, P_s, P_r, P_st,
                            P_ani, P_sh, P_sht, P_c, P_cg, n);
@@ -195,12 +205,13 @@ auto principled_brdf_backward_P_b_cpu(
     const FlexScalarCPU &P_sht = FlexScalarCPU(),
     const FlexScalarCPU &P_c = FlexScalarCPU(),
     const FlexScalarCPU &P_cg = FlexScalarCPU(),
-    const FlexVec3CPU &n = FlexVec3CPU()) -> OutputArrayCPU {
+    const FlexVec3CPU &n = FlexVec3CPU()) -> JacobiOutputArrayCPU {
   cpu::BRDFInputs params =
       inputs_with_defaults(omega_i, omega_o, P_b, P_m, P_ss, P_s, P_r, P_st,
                            P_ani, P_sh, P_sht, P_c, P_cg, n);
 
-  auto *result_data = new float[params.N * 3];
+  // Result are N 3x3 Jacobians
+  auto *result_data = new float[params.N * 9];
   principled_brdf_backward_P_b_cpu_impl(
       params.omega_i.data(), params.omega_o.data(), params.P_b.data(),
       params.P_m.data(), params.P_ss.data(), params.P_s.data(),
@@ -210,7 +221,7 @@ auto principled_brdf_backward_P_b_cpu(
 
   nb::capsule owner(result_data,
                     [](void *ptr) noexcept -> void { delete[] (float *)ptr; });
-  return OutputArrayCPU(result_data, {params.N, 3}, owner);
+  return JacobiOutputArrayCPU(result_data, {params.N, 3, 3}, owner);
 }
 
 // CUDA version with broadcasting and defaults
@@ -227,7 +238,13 @@ auto principled_brdf_backward_P_b_cuda(
     const FlexScalarCUDA &P_sht = FlexScalarCUDA(),
     const FlexScalarCUDA &P_c = FlexScalarCUDA(),
     const FlexScalarCUDA &P_cg = FlexScalarCUDA(),
-    const FlexVec3CUDA &n = FlexVec3CUDA()) -> OutputArrayCUDA {
+    const FlexVec3CUDA &n = FlexVec3CUDA()) -> JacobiOutputArrayCUDA {
+
+  // Ensure that correct gpu is used for computation
+  int target_device =
+      cuda::get_common_cuda_device(omega_i, &omega_o, P_b, P_m, P_ss, P_s, P_r,
+                                   P_st, P_ani, P_sh, P_sht, P_c, P_cg, n);
+  cuda::ScopedCudaDevice device(target_device);
 
   cuda::BRDFInputs params =
       inputs_with_defaults(omega_i, omega_o, P_b, P_m, P_ss, P_s, P_r, P_st,
@@ -243,12 +260,12 @@ auto principled_brdf_backward_P_b_cuda(
       params.omega_i.data(), params.omega_o.data(), params.P_b.data(),
       params.P_m.data(), params.P_ss.data(), params.P_s.data(),
       params.P_r.data(), params.P_st.data(), params.P_ani.data(),
-      params.P_sh.data(), params.P_sht.data(), 
-      params.n.data(), result_data, params.N);
+      params.P_sh.data(), params.P_sht.data(), params.n.data(), result_data,
+      params.N);
 
   nb::capsule owner(result_data,
                     [](void *ptr) noexcept -> void { cuda::cuda_free(ptr); });
-  return OutputArrayCUDA(result_data, {params.N, 3}, owner);
+  return JacobiOutputArrayCUDA(result_data, {params.N, 3, 3}, owner);
 }
 
 NB_MODULE(principled_brdf_functions, module) {
