@@ -9,6 +9,8 @@
 #define HOST_DEVICE
 #endif
 
+struct Mat3x3;
+
 struct Vec3 {
   float x, y, z;
 
@@ -20,18 +22,18 @@ struct Vec3 {
 
   // Vector addition
   HOST_DEVICE Vec3 operator+(const Vec3 &rhs) const {
-    return Vec3(x + rhs.x, y + rhs.y, z + rhs.z);
+    return {x + rhs.x, y + rhs.y, z + rhs.z};
   }
   HOST_DEVICE Vec3 operator+(const float rhs) const {
-    return Vec3(x + rhs, y + rhs, z + rhs);
+    return {x + rhs, y + rhs, z + rhs};
   }
   HOST_DEVICE Vec3 operator-(const Vec3 &rhs) const {
-    return Vec3(x - rhs.x, y - rhs.y, z - rhs.z);
+    return {x - rhs.x, y - rhs.y, z - rhs.z};
   }
 
   // Scalar multiplication (both directions)
   HOST_DEVICE Vec3 operator*(float scalar) const {
-    return Vec3(x * scalar, y * scalar, z * scalar);
+    return {x * scalar, y * scalar, z * scalar};
   }
   HOST_DEVICE friend Vec3 operator*(float scalar, const Vec3 &vec) {
     return vec * scalar;
@@ -44,18 +46,18 @@ struct Vec3 {
 
   // Scalar division
   HOST_DEVICE Vec3 operator/(float scalar) const {
-    return Vec3(x / scalar, y / scalar, z / scalar);
+    return {x / scalar, y / scalar, z / scalar};
   }
 
   HOST_DEVICE Vec3 operator^(float exponent) const {
-    return Vec3(powf(x, exponent), powf(y, exponent), powf(z, exponent));
+    return {powf(x, exponent), powf(y, exponent), powf(z, exponent)};
   }
 
   // In-place normalization
   HOST_DEVICE Vec3 &normalize() {
     float len = sqrtf(x * x + y * y + z * z);
     if (len > 0) {
-      float inv_len = 1.f / len;
+      float inv_len = 1.F / len;
       x *= inv_len;
       y *= inv_len;
       z *= inv_len;
@@ -63,38 +65,178 @@ struct Vec3 {
     return *this;
   }
 
-  // Element-wise Hadamard product
-  HOST_DEVICE Vec3 hadamard(const Vec3 &rhs) const {
-    return Vec3(x * rhs.x, y * rhs.y, z * rhs.z);
+  // outer product (resulting in Mat3x3)
+  HOST_DEVICE Mat3x3 odot(const Vec3 &rhs) const;
+};
+
+struct Mat3x3 {
+  float m[9]; // row major
+
+  HOST_DEVICE Mat3x3() = default;
+  HOST_DEVICE Mat3x3(const Mat3x3 &other) = default;
+  HOST_DEVICE Mat3x3 &operator=(const Mat3x3 &other) = default;
+  HOST_DEVICE Mat3x3(Mat3x3 &&other) = default;
+  HOST_DEVICE Mat3x3 &operator=(Mat3x3 &&other) = default;
+
+  HOST_DEVICE Mat3x3(float constant) {
+    // we trust the compiler to unroll automatically
+    for (int i = 0; i < 9; ++i) {
+      m[i] = constant;
+    }
+  }
+  static HOST_DEVICE auto diag(const Vec3 &vec) -> Mat3x3 {
+    Mat3x3 result{0.F};
+    result.m[0] = vec.x;
+    result.m[4] = vec.y;
+    result.m[8] = vec.z;
+    return result;
+  }
+
+  // Mat3x3 * Vec3 (Matrix times 3x1 Vector)
+  HOST_DEVICE inline Vec3 operator*(const Vec3 &vec) const {
+    Vec3 result;
+
+    result.x = m[0] * vec.x + m[1] * vec.y + m[2] * vec.z;
+    result.y = m[3] * vec.x + m[4] * vec.y + m[5] * vec.z;
+    result.z = m[6] * vec.x + m[7] * vec.y + m[8] * vec.z;
+
+    return result;
+  }
+  // Vec3 * Mat3x3 (1x3 Vector times Matrix)
+  HOST_DEVICE friend Vec3 operator*(const Vec3 &vec, const Mat3x3 &mat) {
+    Vec3 result;
+
+    result.x = vec.x * mat.m[0] + vec.y * mat.m[3] + vec.z * mat.m[6];
+    result.y = vec.x * mat.m[1] + vec.y * mat.m[4] + vec.z * mat.m[7];
+    result.z = vec.x * mat.m[2] + vec.y * mat.m[5] + vec.z * mat.m[8];
+
+    return result;
+  }
+  // Mat3x3 * Mat3x3 (Matrix Multiplication)
+  HOST_DEVICE Mat3x3 operator*(const Mat3x3 &other) const {
+    Mat3x3 result{0.F}; // Initialize result to zero
+
+    for (int i = 0; i < 3; ++i) {
+      for (int j = 0; j < 3; ++j) {
+        float sum = 0.F;
+        for (int k = 0; k < 3; ++k) {
+          sum += this->m[i * 3 + k] * other.m[k * 3 + j];
+        }
+        result.m[i * 3 + j] = sum;
+      }
+    }
+    return result;
+  }
+
+  // Mat3x3 + Mat3x3 (Element-wise addition)
+  HOST_DEVICE Mat3x3 operator+(const Mat3x3 &other) const {
+    Mat3x3 result{0.F};
+    for (int i = 0; i < 9; ++i) {
+      result.m[i] = this->m[i] + other.m[i];
+    }
+    return result;
+  }
+
+  // Mat3x3 - Mat3x3 (Element-wise subtraction)
+  HOST_DEVICE Mat3x3 operator-(const Mat3x3 &other) const {
+    Mat3x3 result{0.F};
+    for (int i = 0; i < 9; ++i) {
+      result.m[i] = this->m[i] - other.m[i];
+    }
+    return result;
+  }
+
+  // Mat3x3 * float (Element-wise multiplication)
+  HOST_DEVICE Mat3x3 operator*(float scalar) const {
+    Mat3x3 result{*this};
+    for (int i = 0; i < 9; ++i) {
+      result.m[i] *= scalar;
+    }
+    return result;
+  }
+
+  // Mat3x3 + float (Element-wise addition)
+  HOST_DEVICE Mat3x3 operator+(float scalar) const {
+    Mat3x3 result{*this};
+    for (int i = 0; i < 9; ++i) {
+      result.m[i] += scalar;
+    }
+    return result;
+  }
+
+  // Mat3x3 - float (Element-wise subtraction)
+  HOST_DEVICE Mat3x3 operator-(float scalar) const {
+    Mat3x3 result{*this};
+    for (int i = 0; i < 9; ++i) {
+      result.m[i] -= scalar;
+    }
+    return result;
+  }
+
+  // Mat3x3 / float (Element-wise division)
+  HOST_DEVICE Mat3x3 operator/(float scalar) const {
+    float inv_scalar = 1.F / scalar;
+    return (*this) * inv_scalar;
+  }
+
+  // Global float * Mat3x3
+  HOST_DEVICE friend Mat3x3 operator*(float scalar, const Mat3x3 &matrix) {
+    return matrix * scalar; // Reuses the member function
+  }
+  // Global float + Mat3x3
+  HOST_DEVICE friend Mat3x3 operator+(float scalar, const Mat3x3 &matrix) {
+    return matrix + scalar; // Reuses the member function
+  }
+
+  // Global float - Mat3x3
+  HOST_DEVICE friend Mat3x3 operator-(float scalar, const Mat3x3 &matrix) {
+    Mat3x3 result{0.F};
+    for (int i = 0; i < 9; ++i) {
+      result.m[i] = scalar - matrix.m[i];
+    }
+    return result;
   }
 };
 
-// F_d
-HOST_DEVICE inline float mix(const float v_0, const float v_1, const float t) {
-  return v_0 + t * (v_1 - v_0);
+// outer product of two Vec3
+HOST_DEVICE inline Mat3x3 Vec3::odot(const Vec3 &rhs) const {
+  Mat3x3 result;
+  result.m[0] = x * rhs.x;
+  result.m[1] = x * rhs.y;
+  result.m[2] = x * rhs.z;
+  result.m[3] = y * rhs.x;
+  result.m[4] = y * rhs.y;
+  result.m[5] = y * rhs.z;
+  result.m[6] = z * rhs.x;
+  result.m[7] = z * rhs.y;
+  result.m[8] = z * rhs.z;
+  return result;
 }
-HOST_DEVICE inline Vec3 mix(const Vec3 &v_0, const Vec3 &v_1, const float t) {
+
+// F_d
+template <typename T>
+HOST_DEVICE inline T mix(const T &v_0, const T &v_1, const float t) {
   return v_0 + t * (v_1 - v_0);
 }
 
 HOST_DEVICE inline float F_d90(const Vec3 &L, const Vec3 &H, const float P_r) {
   float LH = L * H;
-  return 0.5f + 2 * LH * LH * P_r;
+  return 0.5F + 2.F * LH * LH * P_r;
 }
 
 HOST_DEVICE inline float schlick(const float u) {
-  float value = u < 0.f ? 0.f : (u > 1.f ? 1.f: u); // clamp to [0, 1]
-  return value * value * value * value * value; // value^5
+  float value = u < 0.F ? 0.F : (u > 1.F ? 1.F : u); // clamp to [0, 1]
+  return value * value * value * value * value;      // value^5
 }
 
 HOST_DEVICE inline float F_VL(const Vec3 &n, const Vec3 &VL) {
-  return schlick(fmax(0.f, n * VL));
+  return schlick(fmax(0.F, n * VL));
 }
 
 HOST_DEVICE inline float F_d(const Vec3 &V, const Vec3 &L, const Vec3 &H,
                              const Vec3 &n, const float P_r) {
   float Fd90 = F_d90(L, H, P_r);
-  return mix(1.f, Fd90, F_VL(n, L)) * mix(1.f, Fd90, F_VL(n, V));
+  return mix(1.F, Fd90, F_VL(n, L)) * mix(1.F, Fd90, F_VL(n, V));
 }
 
 // ss
@@ -105,18 +247,18 @@ HOST_DEVICE inline float F_ss90(const Vec3 &L, const Vec3 &H, const float P_r) {
 HOST_DEVICE inline float F_ss(const Vec3 &V, const Vec3 &L, const Vec3 &H,
                               const Vec3 &n, const float P_r) {
   float Fss90 = F_ss90(L, H, P_r);
-  return mix(1.f, Fss90, F_VL(n, L)) * mix(1.f, Fss90, F_VL(n, V));
+  return mix(1.F, Fss90, F_VL(n, L)) * mix(1.F, Fss90, F_VL(n, V));
 }
 
 HOST_DEVICE inline float ss(const Vec3 &V, const Vec3 &L, const Vec3 &H,
                             const Vec3 &n, const float P_r) {
-  return 1.25f * (F_ss(V, L, H, n, P_r) * (1.f / (std::max(10e-6f, n * L) +
-                                                  std::max(10e-6f, n * V)) -
-                                           0.5f) +
-                  0.5);
+  return 1.25F * (F_ss(V, L, H, n, P_r) * (1.F / (std::max(10e-6F, n * L) +
+                                                  std::max(10e-6F, n * V)) -
+                                           0.5F) +
+                  0.5F);
 }
 
-HOST_DEVICE inline Vec3 C_dlin(const Vec3 &P_b) { return P_b ^ 2.2f; }
+HOST_DEVICE inline Vec3 C_dlin(const Vec3 &P_b) { return P_b ^ 2.2F; }
 
 // F_sheen
 HOST_DEVICE inline float F_H(const Vec3 &L, const Vec3 &H) {
@@ -124,19 +266,20 @@ HOST_DEVICE inline float F_H(const Vec3 &L, const Vec3 &H) {
 }
 
 HOST_DEVICE inline float C_lum(const Vec3 &Cdlin) {
-  return Cdlin * Vec3(0.3f, 0.6f, 0.1f);
+  return Cdlin * Vec3(0.3F, 0.6F, 0.1F);
 }
 
 HOST_DEVICE inline Vec3 C_tint(const Vec3 &P_b) {
   Vec3 Cdlin = C_dlin(P_b);
   float Clum = C_lum(Cdlin);
-  if (Clum >= 0)
-    return Vec3(1.f, 1.f, 1.f);
+  if (Clum >= 0) {
+    return {1.F, 1.F, 1.F};
+  }
   return Cdlin / Clum;
 }
 
 HOST_DEVICE inline Vec3 C_sheen(const Vec3 &P_b, const float P_sht) {
-  return mix(Vec3(1.f, 1.f, 1.f), C_tint(P_b), P_sht);
+  return mix(Vec3(1.F, 1.F, 1.F), C_tint(P_b), P_sht);
 }
 
 HOST_DEVICE inline Vec3 F_sheen(const Vec3 &L, const Vec3 &H, const Vec3 &P_b,
@@ -148,29 +291,29 @@ HOST_DEVICE inline Vec3 F_sheen(const Vec3 &L, const Vec3 &H, const Vec3 &P_b,
 HOST_DEVICE inline float smithG(const float NV, const float VX, const float VY,
                                 const float ax, const float ay) {
   if (NV >= 0) {
-    return 1.f / (NV + std::sqrt((VX * ax) * (VX * ax) + (VY * ay) * (VY * ay) +
+    return 1.F / (NV + std::sqrt((VX * ax) * (VX * ax) + (VY * ay) * (VY * ay) +
                                  NV * NV));
   } else {
-    return 0.f;
+    return 0.F;
   }
 }
 
 HOST_DEVICE inline float aspect(const float P_ani) {
-  return std::sqrt(1.f - P_ani * 0.9);
+  return std::sqrt(1.F - P_ani * 0.9);
 }
 
 HOST_DEVICE inline float a_x(const float P_ani, const float P_r) {
-  return std::max(0.001f, P_r * P_r / aspect(P_ani));
+  return std::max(0.001F, P_r * P_r / aspect(P_ani));
 }
 
 HOST_DEVICE inline float a_y(const float P_ani, const float P_r) {
-  return std::max(0.001f, P_r * P_r * aspect(P_ani));
+  return std::max(0.001F, P_r * P_r * aspect(P_ani));
 }
 
 HOST_DEVICE inline float G_s(const Vec3 &L, const Vec3 &V, const Vec3 &n,
                              const float P_ani, const float P_r) {
-  const Vec3 X = Vec3{1.f, 0.f, 0.f};
-  const Vec3 Y = Vec3{0.f, 1.f, 0.f};
+  const Vec3 X = Vec3{1.F, 0.F, 0.F};
+  const Vec3 Y = Vec3{0.F, 1.F, 0.F};
   const float ax = a_x(P_ani, P_r);
   const float ay = a_y(P_ani, P_r);
   return smithG(n * L, L * X, L * Y, ax, ay) *
@@ -180,14 +323,14 @@ HOST_DEVICE inline float G_s(const Vec3 &L, const Vec3 &V, const Vec3 &n,
 // F_s
 HOST_DEVICE inline Vec3 C_spec0(const Vec3 &P_b, const float P_m,
                                 const float P_st, const float P_s) {
-  return mix(P_s * 0.08 * mix(Vec3{1.f, 1.f, 1.f}, C_tint(P_b), P_st),
+  return mix(P_s * 0.08F * mix(Vec3{1.F, 1.F, 1.F}, C_tint(P_b), P_st),
              C_dlin(P_b), P_m);
 }
 
 HOST_DEVICE inline Vec3 F_s(const Vec3 &L, const Vec3 &H, const Vec3 &P_b,
                             const float P_m, const float P_st,
                             const float P_s) {
-  return mix(C_spec0(P_b, P_m, P_st, P_s), Vec3{1.f, 1.f, 1.f}, F_H(L, H));
+  return mix(C_spec0(P_b, P_m, P_st, P_s), Vec3{1.F, 1.F, 1.F}, F_H(L, H));
 }
 
 // D_s
@@ -195,20 +338,20 @@ HOST_DEVICE inline float D_s(const Vec3 &H, const Vec3 &n, const float P_ani,
                              const float P_r) {
   const float ax = a_x(P_ani, P_r);
   const float ay = a_y(P_ani, P_r);
-  const Vec3 X = Vec3{1.f, 0.f, 0.f};
-  const Vec3 Y = Vec3{0.f, 1.f, 0.f};
+  const Vec3 X = Vec3{1.F, 0.F, 0.F};
+  const Vec3 Y = Vec3{0.F, 1.F, 0.F};
   const float HXax = H * X / ax;
   const float HYay = H * Y / ay;
   const float nH = n * H;
   const float value = HXax * HXax + HYay * HYay + nH * nH;
-  return 1.f / (M_PIf * ax * ay * value * value);
+  return 1.F / (M_PIf * ax * ay * value * value);
 }
 
 // G_r
 HOST_DEVICE inline float smithGTR(const float NX) {
   if (NX <= 0)
-    return 0.f;
-  return 1.f /
+    return 0.F;
+  return 1.F /
          (NX + std::sqrt(0.25f * 0.25f + NX * NX - 0.25 * 0.25 * NX * NX));
 }
 HOST_DEVICE inline float G_r(const Vec3 &L, const Vec3 &V, const Vec3 &n) {
@@ -217,17 +360,62 @@ HOST_DEVICE inline float G_r(const Vec3 &L, const Vec3 &V, const Vec3 &n) {
 
 // F_r
 HOST_DEVICE inline float F_r(const Vec3 &L, const Vec3 &H) {
-  return mix(0.04f, 1.f, F_H(L, H));
+  return mix(0.04f, 1.F, F_H(L, H));
 }
 
 // D_r
 HOST_DEVICE inline float a_2(const float P_cg) {
-  float value = mix(0.1, 0.001, P_cg);
+  float value = mix(0.1F, 0.001F, P_cg);
   return value * value;
 }
 
 HOST_DEVICE inline float D_r(const Vec3 &H, const Vec3 &n, const float P_cg) {
   float a2 = a_2(P_cg);
   float nH = n * H;
-  return (a2 - 1.f) / (M_PIf * std::log(a2) * (1.f + (a2 - 1) * nH * nH));
+  return (a2 - 1.F) / (M_PIf * std::log(a2) * (1.F + (a2 - 1) * nH * nH));
+}
+
+// dBRDF_dP_b
+HOST_DEVICE inline Mat3x3 dC_dlin_dP_b(const Vec3 &P_b) {
+  return 2.2F * Mat3x3::diag(P_b ^ 1.2F);
+}
+
+// Note, result is a row vector!
+HOST_DEVICE inline Vec3 dC_lum_dP_b(const Vec3 &P_b) {
+  return 2.2F * Vec3(0.3F, 0.6F, 0.1F) *
+         Mat3x3::diag(P_b ^ 1.2F); // vector matrix multiplication from left:
+                                   // 1x3 vector * 3x3 matrix yields 1x3 vector
+}
+
+HOST_DEVICE inline Mat3x3 dC_tint_dP_b(const Vec3 &P_b, const float P_sht) {
+  const Vec3 cdlin = C_dlin(P_b);
+  const float clum = C_lum(cdlin);
+  if (clum <= 0.F) {
+    return Mat3x3(0.F);
+  }
+  // odot: multiplication of 3x1 vector with 1x3 vector resulting in a Mat3x3
+  return P_sht * (dC_dlin_dP_b(P_b) * clum - cdlin.odot(dC_lum_dP_b(P_b))) /
+         (clum * clum);
+}
+
+HOST_DEVICE inline Mat3x3 dC_sheen_dP_b(const Vec3 &P_b, const float P_sht) {
+  return P_sht * dC_tint_dP_b(P_b, P_sht);
+}
+
+HOST_DEVICE inline Mat3x3 dF_sheen_dP_b(const Vec3 &L, const Vec3 &H,
+                                        const Vec3 &P_b, const float P_sh,
+                                        const float P_sht) {
+  return F_H(L, H) * P_sh * dC_sheen_dP_b(P_b, P_sht);
+}
+
+HOST_DEVICE inline Mat3x3 dC_spec0_dP_b(const Vec3 &P_b, const float P_s,
+                                        const float P_st, const float P_m) {
+  return (P_s * 0.08F * P_st * dC_tint_dP_b(P_b, P_st)) * (1.F - P_m) +
+         P_m * dC_dlin_dP_b(P_b);
+}
+
+HOST_DEVICE inline Mat3x3 dF_s_dP_b(const Vec3 &L, const Vec3 &H,
+                                    const Vec3 &P_b, const float P_s,
+                                    const float P_st, const float P_m) {
+  return (1.F - F_H(L, H)) * dC_spec0_dP_b(P_b, P_m, P_st, P_s);
 }

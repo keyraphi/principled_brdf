@@ -467,7 +467,7 @@ C_{dlum} -
 \begin{pmatrix}0.3&0.6&0.1\end{pmatrix}\frac{\partial}{\partial\mathbf{P_b}}
 \left[\mathbf{P_b}^{2.2}\right]\\
 &= 
-2.2\cdot\left[\begin{pmatrix}0.3&0.6&0.1\end{pmatrix}\cdot\mathbf{P_b}^{1.2}\right]
+2.2\cdot\left[\begin{pmatrix}0.3&0.6&0.1\end{pmatrix}\cdot \text{diag}(\mathbf{P_b}^{1.2})\right]
 \end{align}
 
 
@@ -502,7 +502,10 @@ P_s\cdot 0.08 \cdot P_{st} \cdot \mathbf{C_{tint}}\right)
 P_s\cdot 0.08 \cdot P_{st} \cdot \frac{\partial}{\partial\mathbf{P_b}}\mathbf{C_{tint}}
 + P_m \cdot \frac{\partial}{\partial\mathbf{P_b}} \mathbf{C_{dlin}}
 - P_m\cdot P_s\cdot 0.08 \cdot P_{st}
-\cdot \frac{\partial}{\partial\mathbf{P_b}} \mathbf{C_{tint}}
+\cdot \frac{\partial}{\partial\mathbf{P_b}} \mathbf{C_{tint}} \\
+&=
+(P_s\cdot 0.08 \cdot P_{st} \cdot \frac{\partial}{\partial\mathbf{P_b}}\mathbf{C_{tint}}) \cdot (1 - P_m)
++ P_m \cdot \frac{\partial}{\partial\mathbf{P_b}} \mathbf{C_{dlin}}
 \end{align}
 
 

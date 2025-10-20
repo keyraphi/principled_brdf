@@ -205,8 +205,8 @@ auto principled_brdf_backward_P_b_cpu(
       params.omega_i.data(), params.omega_o.data(), params.P_b.data(),
       params.P_m.data(), params.P_ss.data(), params.P_s.data(),
       params.P_r.data(), params.P_st.data(), params.P_ani.data(),
-      params.P_sh.data(), params.P_sht.data(), params.P_c.data(),
-      params.P_cg.data(), params.n.data(), result_data, params.N);
+      params.P_sh.data(), params.P_sht.data(), params.n.data(), result_data,
+      params.N);
 
   nb::capsule owner(result_data,
                     [](void *ptr) noexcept -> void { delete[] (float *)ptr; });
@@ -233,8 +233,9 @@ auto principled_brdf_backward_P_b_cuda(
       inputs_with_defaults(omega_i, omega_o, P_b, P_m, P_ss, P_s, P_r, P_st,
                            P_ani, P_sh, P_sht, P_c, P_cg, n);
 
+  // Result are N 3x3 Jacobians
   auto *result_data =
-      static_cast<float *>(cuda::cuda_allocate(params.N * 3 * sizeof(float)));
+      static_cast<float *>(cuda::cuda_allocate(params.N * 9 * sizeof(float)));
   if (!result_data) {
     throw std::runtime_error("Failed to allocate CUDA memory for output");
   }
@@ -242,8 +243,8 @@ auto principled_brdf_backward_P_b_cuda(
       params.omega_i.data(), params.omega_o.data(), params.P_b.data(),
       params.P_m.data(), params.P_ss.data(), params.P_s.data(),
       params.P_r.data(), params.P_st.data(), params.P_ani.data(),
-      params.P_sh.data(), params.P_sht.data(), params.P_c.data(),
-      params.P_cg.data(), params.n.data(), result_data, params.N);
+      params.P_sh.data(), params.P_sht.data(), 
+      params.n.data(), result_data, params.N);
 
   nb::capsule owner(result_data,
                     [](void *ptr) noexcept -> void { cuda::cuda_free(ptr); });

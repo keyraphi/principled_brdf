@@ -30,6 +30,9 @@ Diagnostics:
       - bugprone-*
     Remove:
       - bugprone-macro-parentheses
+      - bugprone-easily-swappable-parameters
+      - readability-identifier-length
+      - readability-math-missing-parentheses
   UnusedIncludes: Strict
   MissingIncludes: Strict
 
