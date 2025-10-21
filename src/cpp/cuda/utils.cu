@@ -8,6 +8,7 @@
 #include <thrust/fill.h>
 #include <vector>
 #include <vector_functions.h>
+#include <optional>
 
 namespace nb = nanobind;
 
@@ -85,14 +86,15 @@ auto get_cuda_device_from_ndarray(const void *data_ptr) -> int {
 }
 
 // Overload for multiple arrays - picks the first valid one
-auto get_commond_cuda_device(const Vec3ArrayCUDA &omega_i, const Vec3ArrayCUDA &omega_o,
-                     const FlexVec3CUDA &P_b, const FlexScalarCUDA &P_m,
-                     const FlexScalarCUDA &P_ss, const FlexScalarCUDA &P_s,
-                     const FlexScalarCUDA &P_r, const FlexScalarCUDA &P_st,
-                     const FlexScalarCUDA &P_ani, const FlexScalarCUDA &P_sh,
-                     const FlexScalarCUDA &P_sht, const FlexScalarCUDA &P_c,
-                     const FlexScalarCUDA &P_cg, const FlexVec3CUDA &n)
-    -> int {
+auto get_commond_cuda_device(
+    const Vec3ArrayCUDA &omega_i, const Vec3ArrayCUDA &omega_o,
+    const FlexVec3CUDA &P_b, const FlexScalarCUDA &P_m,
+    const FlexScalarCUDA &P_ss, const FlexScalarCUDA &P_s,
+    const FlexScalarCUDA &P_r, const FlexScalarCUDA &P_st,
+    const FlexScalarCUDA &P_ani, const FlexScalarCUDA &P_sh,
+
+    const FlexScalarCUDA &P_sht, const ::std::optional<FlexScalarCUDA> &P_c,
+    const ::std::optional<FlexScalarCUDA> &P_cg, const FlexVec3CUDA &n) -> int {
   // Check all arrays and return the first valid device
   ::std::vector<int> devices;
 
@@ -129,11 +131,11 @@ auto get_commond_cuda_device(const Vec3ArrayCUDA &omega_i, const Vec3ArrayCUDA &
   if (P_sht.size() > 0) {
     devices.push_back(cuda::get_cuda_device_from_ndarray(P_sht.data()));
   }
-  if (P_c.size() > 0) {
-    devices.push_back(cuda::get_cuda_device_from_ndarray(P_c.data()));
+  if (P_c.has_value() && P_c->size() > 0) {
+    devices.push_back(cuda::get_cuda_device_from_ndarray(P_c->data()));
   }
-  if (P_cg.size() > 0) {
-    devices.push_back(cuda::get_cuda_device_from_ndarray(P_cg.data()));
+  if (P_cg.has_value() && P_cg->size() > 0) {
+    devices.push_back(cuda::get_cuda_device_from_ndarray(P_cg->data()));
   }
   if (n.size() > 0) {
     devices.push_back(cuda::get_cuda_device_from_ndarray(n.data()));
@@ -144,14 +146,14 @@ auto get_commond_cuda_device(const Vec3ArrayCUDA &omega_i, const Vec3ArrayCUDA &
     return 0;
   }
   int common_device = 0;
-    // Verify all devices are the same
-    common_device = devices[0];
-    for (size_t i = 1; i < devices.size(); ++i) {
-      if (devices[i] != common_device) {
-        throw ::std::runtime_error("Input tensors are on different GPUs. All "
-                                   "inputs must be on the same GPU.");
-      }
+  // Verify all devices are the same
+  common_device = devices[0];
+  for (size_t i = 1; i < devices.size(); ++i) {
+    if (devices[i] != common_device) {
+      throw ::std::runtime_error("Input tensors are on different GPUs. All "
+                                 "inputs must be on the same GPU.");
     }
+  }
   return common_device;
 }
 

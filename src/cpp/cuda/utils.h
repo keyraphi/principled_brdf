@@ -1,9 +1,10 @@
 #pragma once
+#include <cmath>
 #include <cstddef>
 #include <cuda_runtime_api.h>
 #include <nanobind/nanobind.h>
 #include <nanobind/ndarray.h>
-#include <cmath>
+#include <optional>
 
 namespace nb = nanobind;
 
@@ -30,7 +31,8 @@ Vec3ArrayCUDA broadcast_vec3(const FlexVec3CUDA &source, size_t N,
                              float default_x, float default_y, float default_z);
 
 // Device handling utils
-auto get_cuda_device_from_ndarray(const nb::ndarray<nb::device::cuda> &arr) -> int;
+auto get_cuda_device_from_ndarray(const nb::ndarray<nb::device::cuda> &arr)
+    -> int;
 // set cuda device to common device of inputs
 auto get_common_cuda_device(
     const Vec3ArrayCUDA &omega_i, const Vec3ArrayCUDA &omega_o,
@@ -38,25 +40,24 @@ auto get_common_cuda_device(
     const FlexScalarCUDA &P_ss, const FlexScalarCUDA &P_s,
     const FlexScalarCUDA &P_r, const FlexScalarCUDA &P_st,
     const FlexScalarCUDA &P_ani, const FlexScalarCUDA &P_sh,
-    const FlexScalarCUDA &P_sht, const FlexScalarCUDA &P_c,
-    const FlexScalarCUDA &P_cg, const FlexVec3CUDA &n) -> int;
+    const FlexScalarCUDA &P_sht, const ::std::optional<FlexScalarCUDA> &P_c,
+    const ::std::optional<FlexScalarCUDA> &P_cg, const FlexVec3CUDA &n) -> int;
 
 class ScopedCudaDevice {
 private:
-    int original_device_;
+  int original_device_;
+
 public:
-    ScopedCudaDevice(int new_device) {
-        cudaGetDevice(&original_device_);
-        cudaSetDevice(new_device);
-    }
-    
-    ~ScopedCudaDevice() {
-        cudaSetDevice(original_device_);
-    }
-    
-    // Disallow copying
-    ScopedCudaDevice(const ScopedCudaDevice&) = delete;
-    ScopedCudaDevice& operator=(const ScopedCudaDevice&) = delete;
+  ScopedCudaDevice(int new_device) {
+    cudaGetDevice(&original_device_);
+    cudaSetDevice(new_device);
+  }
+
+  ~ScopedCudaDevice() { cudaSetDevice(original_device_); }
+
+  // Disallow copying
+  ScopedCudaDevice(const ScopedCudaDevice &) = delete;
+  ScopedCudaDevice &operator=(const ScopedCudaDevice &) = delete;
 };
 
 struct __attribute__((visibility("default"))) BRDFInputs {

@@ -1,4 +1,4 @@
-#include "../common/common_utils.h"
+#include "../common/brdf_utils.h"
 #include "principled_brdf_cuda.h"
 #include <cstddef>
 #include <cstdint>

@@ -1,5 +1,5 @@
 #include "principled_brdf_cpu.h"
-#include "../common/common_utils.h"
+#include "../common/brdf_utils.h"
 #include <cstddef>
 #include <math.h>
 
