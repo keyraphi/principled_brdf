@@ -423,8 +423,7 @@ HOST_DEVICE inline Mat3x3 dF_s_dP_b(const Vec3 &L, const Vec3 &H,
   return (1.F - F_H(L, H)) * dC_spec0_dP_b(P_b, P_s, P_st, P_m);
 }
 
-// dBRDF_dP_m
-// //////////////////////////////////////////////////////////////////////
+// dBRDF_dP_m ////////////////////////////////////////////////////////////////
 HOST_DEVICE inline Vec3 dC_spec0_dP_m(const Vec3 &P_b, const float P_s,
                                       const float P_st) {
   return C_dlin(P_b) -
@@ -434,4 +433,9 @@ HOST_DEVICE inline Vec3 dC_spec0_dP_m(const Vec3 &P_b, const float P_s,
 HOST_DEVICE inline Vec3 dF_s_dP_m(const Vec3 &L, const Vec3 &H, const Vec3 &P_b,
                                  const float P_st, const float P_s) {
   return (1.F - F_H(L, H)) * dC_spec0_dP_m(P_b, P_s, P_st);
+}
+
+// dBRDF_dP_m ////////////////////////////////////////////////////////////////
+HOST_DEVICE inline Vec3 dC_spec0_dP_s(const Vec3 &P_b, const float P_m, const float P_st) {
+  return 0.08F * mix(Vec3{1.F, 1.F, 1.F}, C_tint(P_b), P_st) * (1.F - P_m);
 }

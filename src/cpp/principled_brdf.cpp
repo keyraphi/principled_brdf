@@ -396,8 +396,7 @@ auto principled_brdf_backward_P_m_cuda(
   return OutputArrayCUDA(result_data, {params.N, 3}, owner);
 }
 
-// PARTIAL DERIVATIVE w.r.t P_ss
-// ////////////////////////////////////////////////
+// PARTIAL DERIVATIVE w.r.t P_ss //////////////////////////////////////////////
 auto principled_brdf_backward_P_ss_cpu(
     const Vec3ArrayCPU &omega_i, const Vec3ArrayCPU &omega_o,
     const FlexVec3CPU &P_b = FlexVec3CPU(),
@@ -450,6 +449,68 @@ auto principled_brdf_backward_P_ss_cuda(
   principled_brdf_backward_P_ss_cuda_impl(
       params.omega_i.data(), params.omega_o.data(), params.P_b.data(),
       params.P_m.data(), params.P_r.data(), params.n.data(), result_data,
+      params.N);
+
+  nb::capsule owner(result_data,
+                    [](void *ptr) noexcept -> void { cuda::cuda_free(ptr); });
+  return OutputArrayCUDA(result_data, {params.N, 3}, owner);
+}
+
+// PARTIAL DERIVATIVE w.r.t P_s //////////////////////////////////////////////
+auto principled_brdf_backward_P_s_cpu(
+    const Vec3ArrayCPU &omega_i, const Vec3ArrayCPU &omega_o,
+    const FlexVec3CPU &P_b = FlexVec3CPU(),
+    const FlexScalarCPU &P_m = FlexScalarCPU(),
+    const FlexScalarCPU &P_st = FlexScalarCPU(),
+    const FlexVec3CPU &n = FlexVec3CPU()) -> OutputArrayCPU {
+  // Compolete inputs with defaults and broadcast constants for all required
+  // parameters
+  cpu::BRDFInputs params = inputs_with_defaults(
+      omega_i, omega_o, P_b, P_m, std::nullopt, std::nullopt, std::nullopt,
+      P_st, std::nullopt, std::nullopt, std::nullopt, std::nullopt,
+      std::nullopt, n);
+
+  auto *result_data = new float[params.N * 3];
+  principled_brdf_backward_P_s_cpu_impl(
+      params.omega_i.data(), params.omega_o.data(), params.P_b.data(),
+      params.P_m.data(), params.P_st.data(), params.n.data(), result_data,
+      params.N);
+
+  nb::capsule owner(result_data,
+                    [](void *ptr) noexcept -> void { delete[] (float *)ptr; });
+  return OutputArrayCPU(result_data, {params.N, 3}, owner);
+}
+
+// CUDA version with broadcasting and defaults
+auto principled_brdf_backward_P_s_cuda(
+    const Vec3ArrayCUDA &omega_i, const Vec3ArrayCUDA &omega_o,
+    const FlexVec3CUDA &P_b = FlexVec3CUDA(),
+    const FlexScalarCUDA &P_m = FlexScalarCUDA(),
+    const FlexScalarCUDA &P_st = FlexScalarCUDA(),
+    const FlexVec3CUDA &n = FlexVec3CUDA()) -> OutputArrayCUDA {
+
+  // Ensure that correct gpu is used for computation
+  int target_device = cuda::get_common_cuda_device(
+      omega_i, omega_o, P_b, P_m, std::nullopt, std::nullopt, std::nullopt,
+      P_st, std::nullopt, std::nullopt, std::nullopt, std::nullopt,
+      std::nullopt, n);
+  cuda::ScopedCudaDevice device(target_device);
+
+  // Compolete inputs with defaults and broadcast constants for all required
+  // parameters
+  cuda::BRDFInputs params = inputs_with_defaults(
+      omega_i, omega_o, P_b, P_m, std::nullopt, std::nullopt, std::nullopt,
+      P_st, std::nullopt, std::nullopt, std::nullopt, std::nullopt,
+      std::nullopt, n);
+
+  auto *result_data =
+      static_cast<float *>(cuda::cuda_allocate(params.N * 3 * sizeof(float)));
+  if (result_data == nullptr) {
+    throw std::runtime_error("Failed to allocate CUDA memory for output");
+  }
+  principled_brdf_backward_P_s_cuda_impl(
+      params.omega_i.data(), params.omega_o.data(), params.P_b.data(),
+      params.P_m.data(), params.P_st.data(), params.n.data(), result_data,
       params.N);
 
   nb::capsule owner(result_data,
@@ -679,5 +740,56 @@ NB_MODULE(principled_brdf_functions, module) {
       "clearcoat and clearcoat_gloss are NOT needed!\n",
       "omega_i"_a, "omega_o"_a, nb::kw_only(), "basecolor"_a = FlexVec3CUDA(),
       "metallic"_a = FlexScalarCUDA(), "roughness"_a = FlexScalarCUDA(),
+      "normal"_a = FlexVec3CUDA());
+
+  module.def(
+      "principled_brdf_backward_specular", &principled_brdf_backward_P_s_cpu,
+      "CPU implementation of the partial derivative of the Principled BRDF "
+      "w.r.t. the specular parameter P_s.\n\n"
+      "This implementation is used when all arguments are on cpu.\n"
+      "Args:\n"
+      "    omega_i (L): Direction towards incoming light [N, 3]\n"
+      "    omega_o (V): Direction towards viewer [N, 3]\n"
+      "    basecolor (P_b): Base color [N, 3] or [1, 3] (default: [0.8, 0.8, "
+      "0.8])\n"
+      "    metallic (P_m): Metallic [N] or [1] (default: 0.0)\n"
+      "    subsurface (P_ss): Subsurface [N] or [1] (default: 0.0)\n"
+      "    specular (P_s): Specular [N] or [1] (default: 0.5)\n"
+      "    roughness (P_r): Roughness [N] or [1] (default: 0.5)\n"
+      "    specular_tint (P_st): Specular tint [N] or [1] (default: 0.0)\n"
+      "    anisotropy (P_ani): Anisotropic [N] or [1] (default: 0.0)\n"
+      "    sheen (P_sh): Sheen [N] or [1] (default: 0.0)\n"
+      "    sheen_tint (P_sht): Sheen tint [N] or [1] (default: 0.5)\n"
+      "    clearcoat (P_c): Clearcoat [N] or [1] (default: 0.0)\n"
+      "    clearcoat_gloss (P_cg): Clearcoat gloss [N] or [1] (default: 1.0)\n"
+      "    normal (n): Surface normal [N, 3] or [1, 3] (default: [0, 0, 1])\n\n"
+      "Returns:\n"
+      "    Partial derivative dBRDF/dP_s value in rgb [N, 3]\n\n"
+      "Note:\n"
+      "    subsurface, specular, roughness, anisotropy, sheen, sheen_tint, "
+      "clearcoat and clearcoat_gloss are NOT needed!\n",
+      "omega_i"_a, "omega_o"_a, nb::kw_only(), "basecolor"_a = FlexVec3CPU(),
+      "metallic"_a = FlexScalarCPU(), "specular_tint"_a = FlexScalarCPU(),
+      "normal"_a = FlexVec3CPU());
+
+  module.def(
+      "principled_brdf_forward", &principled_brdf_backward_P_s_cuda,
+      "GPU implementation of the partial derivative of the Principled BRDF "
+      "w.r.t. the subsurface parameter P_ss.\n\n"
+      "This implementation is used when all arguments are on gpu.\n"
+      "Args:\n"
+      "    omega_i: Incoming light direction [N, 3]\n"
+      "    omega_o: Outgoing view direction [N, 3]\n"
+      "    basecolor: Base color [N, 3] or [1, 3] (default: [0.8, 0.8, 0.8])\n"
+      "    metallic: Metallic [N] or [1] (default: 0.0)\n"
+      "    specular_tint: Specular tint [N] or [1] (default: 0.0)\n"
+      "    normal: Surface normal [N, 3] or [1, 3] (default: [0, 0, 1])\n\n"
+      "Returns:\n"
+      "    Partial derivative dBRDF/dP_s value in rgb [N, 3]\n\n"
+      "Note:\n"
+      "    subsurface, specular, roughness, anisotropy, sheen, sheen_tint, "
+      "clearcoat and clearcoat_gloss are NOT needed!\n",
+      "omega_i"_a, "omega_o"_a, nb::kw_only(), "basecolor"_a = FlexVec3CUDA(),
+      "metallic"_a = FlexScalarCUDA(), "specular_tint"_a = FlexScalarCUDA(),
       "normal"_a = FlexVec3CUDA());
 }

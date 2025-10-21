@@ -128,3 +128,26 @@ void principled_brdf_backward_P_ss_cpu_impl(
     result[(i * 3) + 2] = dBRDF_dP_ss.z;
   }
 }
+
+void principled_brdf_backward_P_s_cpu_impl(
+    const float *__restrict__ omega_i, const float *__restrict__ omega_o,
+    const float *__restrict__ P_b, const float *__restrict__ P_m,
+    const float *__restrict__ P_st, const float *__restrict__ n,
+    float *__restrict__ result, size_t N) {
+#pragma omp parallel for
+  for (size_t i = 0; i < N; ++i) {
+    const Vec3 L(omega_i[i * 3], omega_i[(i * 3) + 1], omega_i[(i * 3) + 2]);
+    const Vec3 V(omega_o[i * 3], omega_o[(i * 3) + 1], omega_o[(i * 3) + 2]);
+    const Vec3 H = (V + L).normalize();
+
+    Vec3 n_{n[i * 3], n[(i * 3) + 1], n[(i * 3) + 2]};
+    Vec3 P_b_{P_b[i * 3], P_b[(i * 3) + 1], P_b[(i * 3) + 2]};
+
+    const Vec3 dBRDF_dP_s =
+        (1.F - F_H(L, H)) * dC_spec0_dP_s(P_b_, P_m[i], P_st[i]);
+
+    result[i * 3] = dBRDF_dP_s.x;
+    result[(i * 3) + 1] = dBRDF_dP_s.y;
+    result[(i * 3) + 2] = dBRDF_dP_s.z;
+  }
+}
