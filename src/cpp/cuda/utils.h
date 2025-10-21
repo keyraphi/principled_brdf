@@ -34,14 +34,20 @@ Vec3ArrayCUDA broadcast_vec3(const FlexVec3CUDA &source, size_t N,
 auto get_cuda_device_from_ndarray(const nb::ndarray<nb::device::cuda> &arr)
     -> int;
 // set cuda device to common device of inputs
-auto get_common_cuda_device(
-    const Vec3ArrayCUDA &omega_i, const Vec3ArrayCUDA &omega_o,
-    const FlexVec3CUDA &P_b, const FlexScalarCUDA &P_m,
-    const FlexScalarCUDA &P_ss, const FlexScalarCUDA &P_s,
-    const FlexScalarCUDA &P_r, const FlexScalarCUDA &P_st,
-    const FlexScalarCUDA &P_ani, const FlexScalarCUDA &P_sh,
-    const FlexScalarCUDA &P_sht, const ::std::optional<FlexScalarCUDA> &P_c,
-    const ::std::optional<FlexScalarCUDA> &P_cg, const FlexVec3CUDA &n) -> int;
+auto get_common_cuda_device(const Vec3ArrayCUDA &omega_i,
+                            const Vec3ArrayCUDA &omega_o,
+                            const FlexVec3CUDA &P_b,
+                            const ::std::optional<FlexScalarCUDA> &P_m,
+                            const ::std::optional<FlexScalarCUDA> &P_ss,
+                            const ::std::optional<FlexScalarCUDA> &P_s,
+                            const ::std::optional<FlexScalarCUDA> &P_r,
+                            const ::std::optional<FlexScalarCUDA> &P_st,
+                            const ::std::optional<FlexScalarCUDA> &P_ani,
+                            const ::std::optional<FlexScalarCUDA> &P_sh,
+                            const ::std::optional<FlexScalarCUDA> &P_sht,
+                            const ::std::optional<FlexScalarCUDA> &P_c,
+                            const ::std::optional<FlexScalarCUDA> &P_cg,
+                            const ::std::optional<FlexVec3CUDA> &n) -> int;
 
 class ScopedCudaDevice {
 private:

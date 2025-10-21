@@ -30,6 +30,9 @@ struct Vec3 {
   HOST_DEVICE Vec3 operator-(const Vec3 &rhs) const {
     return {x - rhs.x, y - rhs.y, z - rhs.z};
   }
+  HOST_DEVICE Vec3 operator-() const {
+    return {-x, -y, -z};
+  }
 
   // Scalar multiplication (both directions)
   HOST_DEVICE Vec3 operator*(float scalar) const {
@@ -252,10 +255,10 @@ HOST_DEVICE inline float F_ss(const Vec3 &V, const Vec3 &L, const Vec3 &H,
 
 HOST_DEVICE inline float ss(const Vec3 &V, const Vec3 &L, const Vec3 &H,
                             const Vec3 &n, const float P_r) {
-  return 1.25F * (F_ss(V, L, H, n, P_r) * (1.F / (fmaxf(10e-6F, n * L) +
-                                                  fmaxf(10e-6F, n * V)) -
-                                           0.5F) +
-                  0.5F);
+  return 1.25F *
+         (F_ss(V, L, H, n, P_r) *
+              (1.F / (fmaxf(10e-6F, n * L) + fmaxf(10e-6F, n * V)) - 0.5F) +
+          0.5F);
 }
 
 HOST_DEVICE inline Vec3 C_dlin(const Vec3 &P_b) { return P_b ^ 2.2F; }
@@ -292,7 +295,7 @@ HOST_DEVICE inline float smithG(const float NV, const float VX, const float VY,
                                 const float ax, const float ay) {
   if (NV >= 0) {
     return 1.F / (NV + sqrtf((VX * ax) * (VX * ax) + (VY * ay) * (VY * ay) +
-                                 NV * NV));
+                             NV * NV));
   } else {
     return 0.F;
   }
@@ -351,8 +354,7 @@ HOST_DEVICE inline float D_s(const Vec3 &H, const Vec3 &n, const float P_ani,
 HOST_DEVICE inline float smithGTR(const float NX) {
   if (NX <= 0)
     return 0.F;
-  return 1.F /
-         (NX + sqrtf(0.25f * 0.25f + NX * NX - 0.25 * 0.25 * NX * NX));
+  return 1.F / (NX + sqrtf(0.25f * 0.25f + NX * NX - 0.25 * 0.25 * NX * NX));
 }
 HOST_DEVICE inline float G_r(const Vec3 &L, const Vec3 &V, const Vec3 &n) {
   return smithGTR(n * L) * smithGTR(n * V);
@@ -376,6 +378,7 @@ HOST_DEVICE inline float D_r(const Vec3 &H, const Vec3 &n, const float P_cg) {
 }
 
 // dBRDF_dP_b
+// //////////////////////////////////////////////////////////////////////
 HOST_DEVICE inline Mat3x3 dC_dlin_dP_b(const Vec3 &P_b) {
   return 2.2F * Mat3x3::diag(P_b ^ 1.2F);
 }
@@ -418,4 +421,17 @@ HOST_DEVICE inline Mat3x3 dF_s_dP_b(const Vec3 &L, const Vec3 &H,
                                     const Vec3 &P_b, const float P_s,
                                     const float P_st, const float P_m) {
   return (1.F - F_H(L, H)) * dC_spec0_dP_b(P_b, P_s, P_st, P_m);
+}
+
+// dBRDF_dP_m
+// //////////////////////////////////////////////////////////////////////
+HOST_DEVICE inline Vec3 dC_spec0_dP_m(const Vec3 &P_b, const float P_s,
+                                      const float P_st) {
+  return C_dlin(P_b) -
+         P_s * 0.08F *
+             (Vec3{1.F, 1.F, 1.F} + P_st * (C_tint(P_b) - Vec3{1.F, 1.F, 1.F}));
+}
+HOST_DEVICE inline Vec3 dF_s_dP_m(const Vec3 &L, const Vec3 &H, const Vec3 &P_b,
+                                 const float P_st, const float P_s) {
+  return (1.F - F_H(L, H)) * dC_spec0_dP_m(P_b, P_s, P_st);
 }

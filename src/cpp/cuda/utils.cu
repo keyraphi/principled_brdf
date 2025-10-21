@@ -1,5 +1,6 @@
 #include "utils.h"
 #include <cstddef>
+#include <cuda/std/detail/libcxx/include/optional>
 #include <cuda_runtime_api.h>
 #include <driver_types.h>
 #include <nanobind/ndarray.h>
@@ -87,14 +88,20 @@ auto get_cuda_device_from_ndarray(const void *data_ptr) -> int {
 
 // Overload for multiple arrays - picks the first valid one
 auto get_commond_cuda_device(
-    const Vec3ArrayCUDA &omega_i, const Vec3ArrayCUDA &omega_o,
-    const FlexVec3CUDA &P_b, const FlexScalarCUDA &P_m,
-    const FlexScalarCUDA &P_ss, const FlexScalarCUDA &P_s,
-    const FlexScalarCUDA &P_r, const FlexScalarCUDA &P_st,
-    const FlexScalarCUDA &P_ani, const FlexScalarCUDA &P_sh,
-
-    const FlexScalarCUDA &P_sht, const ::std::optional<FlexScalarCUDA> &P_c,
-    const ::std::optional<FlexScalarCUDA> &P_cg, const FlexVec3CUDA &n) -> int {
+const Vec3ArrayCUDA &omega_i,
+                            const Vec3ArrayCUDA &omega_o,
+                            const FlexVec3CUDA &P_b,
+                            const ::std::optional<FlexScalarCUDA> &P_m,
+                            const ::std::optional<FlexScalarCUDA> &P_ss,
+                            const ::std::optional<FlexScalarCUDA> &P_s,
+                            const ::std::optional<FlexScalarCUDA> &P_r,
+                            const ::std::optional<FlexScalarCUDA> &P_st,
+                            const ::std::optional<FlexScalarCUDA> &P_ani,
+                            const ::std::optional<FlexScalarCUDA> &P_sh,
+                            const ::std::optional<FlexScalarCUDA> &P_sht,
+                            const ::std::optional<FlexScalarCUDA> &P_c,
+                            const ::std::optional<FlexScalarCUDA> &P_cg,
+                            const ::std::optional<FlexVec3CUDA> &n) -> int {
   // Check all arrays and return the first valid device
   ::std::vector<int> devices;
 
@@ -107,29 +114,29 @@ auto get_commond_cuda_device(
   if (P_b.size() > 0) {
     devices.push_back(cuda::get_cuda_device_from_ndarray(P_b.data()));
   }
-  if (P_m.size() > 0) {
-    devices.push_back(cuda::get_cuda_device_from_ndarray(P_m.data()));
+  if (P_m.has_value() && P_m->size() > 0) {
+    devices.push_back(cuda::get_cuda_device_from_ndarray(P_m->data()));
   }
-  if (P_ss.size() > 0) {
-    devices.push_back(cuda::get_cuda_device_from_ndarray(P_ss.data()));
+  if (P_ss.has_value() && P_ss->size() > 0) {
+    devices.push_back(cuda::get_cuda_device_from_ndarray(P_ss->data()));
   }
-  if (P_s.size() > 0) {
-    devices.push_back(cuda::get_cuda_device_from_ndarray(P_s.data()));
+  if (P_s.has_value() && P_s->size() > 0) {
+    devices.push_back(cuda::get_cuda_device_from_ndarray(P_s->data()));
   }
-  if (P_r.size() > 0) {
-    devices.push_back(cuda::get_cuda_device_from_ndarray(P_r.data()));
+  if (P_r.has_value() && P_r->size() > 0) {
+    devices.push_back(cuda::get_cuda_device_from_ndarray(P_r->data()));
   }
-  if (P_st.size() > 0) {
-    devices.push_back(cuda::get_cuda_device_from_ndarray(P_st.data()));
+  if (P_st.has_value() && P_st->size() > 0) {
+    devices.push_back(cuda::get_cuda_device_from_ndarray(P_st->data()));
   }
-  if (P_ani.size() > 0) {
-    devices.push_back(cuda::get_cuda_device_from_ndarray(P_ani.data()));
+  if (P_ani.has_value() && P_ani->size() > 0) {
+    devices.push_back(cuda::get_cuda_device_from_ndarray(P_ani->data()));
   }
-  if (P_sh.size() > 0) {
-    devices.push_back(cuda::get_cuda_device_from_ndarray(P_sh.data()));
+  if (P_sh.has_value() && P_sh->size() > 0) {
+    devices.push_back(cuda::get_cuda_device_from_ndarray(P_sh->data()));
   }
-  if (P_sht.size() > 0) {
-    devices.push_back(cuda::get_cuda_device_from_ndarray(P_sht.data()));
+  if (P_sht.has_value() && P_sht->size() > 0) {
+    devices.push_back(cuda::get_cuda_device_from_ndarray(P_sht->data()));
   }
   if (P_c.has_value() && P_c->size() > 0) {
     devices.push_back(cuda::get_cuda_device_from_ndarray(P_c->data()));
@@ -137,8 +144,8 @@ auto get_commond_cuda_device(
   if (P_cg.has_value() && P_cg->size() > 0) {
     devices.push_back(cuda::get_cuda_device_from_ndarray(P_cg->data()));
   }
-  if (n.size() > 0) {
-    devices.push_back(cuda::get_cuda_device_from_ndarray(n.data()));
+  if (n.has_value() && n->size() > 0) {
+    devices.push_back(cuda::get_cuda_device_from_ndarray(n->data()));
   }
   // If no arrays have data (shouldn't happen in practice), default to device
   // 0

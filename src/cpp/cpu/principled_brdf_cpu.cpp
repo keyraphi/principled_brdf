@@ -38,7 +38,6 @@ void principled_brdf_forward_cpu_impl(
   }
 }
 
-
 void principled_brdf_backward_P_b_cpu_impl(
     const float *__restrict__ omega_i, const float *__restrict__ omega_o,
     const float *__restrict__ P_b, const float *__restrict__ P_m,
@@ -57,20 +56,75 @@ void principled_brdf_backward_P_b_cpu_impl(
     Vec3 P_b_{P_b[i * 3], P_b[(i * 3) + 1], P_b[(i * 3) + 2]};
 
     const Mat3x3 dBRDFdP_b =
-        ((1.F - P_m[i]) * M_1_PIf * mix(F_d(V, L, H, n_, P_r[i]), ss(V, L, H, n_, P_r[i]), P_ss[i]) *
+        ((1.F - P_m[i]) * M_1_PIf *
+         mix(F_d(V, L, H, n_, P_r[i]), ss(V, L, H, n_, P_r[i]), P_ss[i]) *
          dC_dlin_dP_b(P_b_)) +
         dF_sheen_dP_b(L, H, P_b_, P_sh[i], P_sht[i]) +
         (D_s(H, n_, P_ani[i], P_r[i]) * G_s(L, V, n_, P_ani[i], P_r[i]) *
          dF_s_dP_b(L, H, P_b_, P_s[i], P_st[i], P_m[i]));
 
-    result[9*i + 0] = dBRDFdP_b.m[0];
-    result[9*i + 1] = dBRDFdP_b.m[1];
-    result[9*i + 2] = dBRDFdP_b.m[2];
-    result[9*i + 3] = dBRDFdP_b.m[3];
-    result[9*i + 4] = dBRDFdP_b.m[4];
-    result[9*i + 5] = dBRDFdP_b.m[5];
-    result[9*i + 6] = dBRDFdP_b.m[6];
-    result[9*i + 7] = dBRDFdP_b.m[7];
-    result[9*i + 8] = dBRDFdP_b.m[8];
+    result[9 * i + 0] = dBRDFdP_b.m[0];
+    result[9 * i + 1] = dBRDFdP_b.m[1];
+    result[9 * i + 2] = dBRDFdP_b.m[2];
+    result[9 * i + 3] = dBRDFdP_b.m[3];
+    result[9 * i + 4] = dBRDFdP_b.m[4];
+    result[9 * i + 5] = dBRDFdP_b.m[5];
+    result[9 * i + 6] = dBRDFdP_b.m[6];
+    result[9 * i + 7] = dBRDFdP_b.m[7];
+    result[9 * i + 8] = dBRDFdP_b.m[8];
+  }
+}
+
+void principled_brdf_backward_P_m_cpu_impl(
+    const float *__restrict__ omega_i, const float *__restrict__ omega_o,
+    const float *__restrict__ P_b, const float *__restrict__ P_ss,
+    const float *__restrict__ P_s, const float *__restrict__ P_r,
+    const float *__restrict__ P_st, const float *__restrict__ P_ani,
+    const float *__restrict__ P_sh, const float *__restrict__ P_sht,
+    const float *__restrict__ n, float *__restrict__ result, size_t N) {
+#pragma omp parallel for
+  for (size_t i = 0; i < N; ++i) {
+    const Vec3 L(omega_i[i * 3], omega_i[(i * 3) + 1], omega_i[(i * 3) + 2]);
+    const Vec3 V(omega_o[i * 3], omega_o[(i * 3) + 1], omega_o[(i * 3) + 2]);
+    const Vec3 H = (V + L).normalize();
+
+    Vec3 n_{n[i * 3], n[(i * 3) + 1], n[(i * 3) + 2]};
+    Vec3 P_b_{P_b[i * 3], P_b[(i * 3) + 1], P_b[(i * 3) + 2]};
+
+    const Vec3 dBRDF_dP_m =
+        -(M_1_PIf *
+              mix(F_d(V, L, H, n_, P_r[i]), ss(V, L, H, n_, P_r[i]), P_ss[i]) *
+              C_dlin(P_b_) +
+          F_sheen(L, H, P_b_, P_sht[i], P_sh[i])) +
+        G_s(L, V, n_, P_ani[i], P_r[i]) * D_s(H, n_, P_ani[i], P_r[i]) *
+            dF_s_dP_m(L, H, P_b_, P_st[i], P_s[i]);
+
+    result[i * 3] = dBRDF_dP_m.x;
+    result[(i * 3) + 1] = dBRDF_dP_m.y;
+    result[(i * 3) + 2] = dBRDF_dP_m.z;
+  }
+}
+
+void principled_brdf_backward_P_ss_cpu_impl(
+    const float *__restrict__ omega_i, const float *__restrict__ omega_o,
+    const float *__restrict__ P_b, const float *__restrict__ P_m,
+    const float *__restrict__ P_r, const float *__restrict__ n,
+    float *__restrict__ result, size_t N) {
+#pragma omp parallel for
+  for (size_t i = 0; i < N; ++i) {
+    const Vec3 L(omega_i[i * 3], omega_i[(i * 3) + 1], omega_i[(i * 3) + 2]);
+    const Vec3 V(omega_o[i * 3], omega_o[(i * 3) + 1], omega_o[(i * 3) + 2]);
+    const Vec3 H = (V + L).normalize();
+
+    Vec3 n_{n[i * 3], n[(i * 3) + 1], n[(i * 3) + 2]};
+    Vec3 P_b_{P_b[i * 3], P_b[(i * 3) + 1], P_b[(i * 3) + 2]};
+
+    const Vec3 dBRDF_dP_ss =
+        (1.F - P_m[i]) * M_1_PIf * C_dlin(P_b_) *
+        (ss(V, L, H, n_, P_r[i]) - F_d(V, L, H, n_, P_r[i]));
+
+    result[i * 3] = dBRDF_dP_ss.x;
+    result[(i * 3) + 1] = dBRDF_dP_ss.y;
+    result[(i * 3) + 2] = dBRDF_dP_ss.z;
   }
 }
