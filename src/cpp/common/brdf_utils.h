@@ -525,9 +525,8 @@ dnominator_dD_s_dP_r(const Vec3 &H, const Vec3 &X, const Vec3 &Y,
                                                    ax, ay))) +
          ax * (HXax2HYay2nH2 * HXax2HYay2nH2 * da_y_dP_r(P_r, P_ani));
 }
-HOST_DEVICE inline float dD_s_dP_r(const Vec3 &H,
-                                   const float P_r, const float P_ani,
-                                   const Vec3 &n) {
+HOST_DEVICE inline float dD_s_dP_r(const Vec3 &H, const float P_r,
+                                   const float P_ani, const Vec3 &n) {
   const float ax = a_x(P_ani, P_r);
   const float ay = a_y(P_ani, P_r);
   const Vec3 X = Vec3{1.F, 0.F, 0.F};
@@ -538,5 +537,38 @@ HOST_DEVICE inline float dD_s_dP_r(const Vec3 &H,
   const float HXax2HYay2nH2 = (HXax * HXax + HYay * HYay + nH * nH);
   const float denom = (M_PIf * a_x(P_ani, P_r) * a_y(P_ani, P_r) *
                        HXax2HYay2nH2 * HXax2HYay2nH2);
-  return dnominator_dD_s_dP_r(H, X, Y, P_r, P_ani, HXax2HYay2nH2, HXax, HYay, ax, ay) / (denom * denom);
+  return dnominator_dD_s_dP_r(H, X, Y, P_r, P_ani, HXax2HYay2nH2, HXax, HYay,
+                              ax, ay) /
+         (denom * denom);
+}
+
+HOST_DEVICE inline float dS_LV_dP_r(const float P_r, const float P_ani,
+                                    const float LVXax, const float LVYay,
+                                    const float nLV, const float LVX,
+                                    const float LVY) {
+  const float S_LV = sqrtf(LVXax * LVXax + LVYay * LVYay + nLV * nLV);
+  return (1.F / S_LV) * (LVXax * LVX * da_x_dP_r(P_r, P_ani) +
+                         (LVYay * LVY) * LVY * da_y_dP_r(P_r, P_ani));
+}
+HOST_DEVICE inline float dsmithG_LV_dP_r(const float P_r, const float P_ani,
+                                        const float nLV, const float LVX,
+                                        const float LVY, const float ax,
+                                        const float ay) {
+  if (nLV < 0) {
+    return 0.F;
+  }
+  const float smithg = smithG(nLV, LVX, LVY, ax, ay);
+  return smithg * smithg *
+         dS_LV_dP_r(P_r, P_ani, LVX * ax, LVY * ay, nLV, LVX, LVY);
+}
+HOST_DEVICE inline float dG_s_dP_r(const Vec3 &L, const Vec3 &V,
+                                   const float P_r, const float P_ani,
+                                   const Vec3 &n) {
+  const float ax = a_x(P_ani, P_r);
+  const float ay = a_y(P_ani, P_r);
+  const Vec3 X = Vec3{1.F, 0.F, 0.F};
+  const Vec3 Y = Vec3{0.F, 1.F, 0.F};
+
+  return smithG(n * L, L * X, L * Y, ax, ay) * dsmithG_LV_dP_r(P_r, P_ani, n*V, V*X, V*Y, ax, ay) +
+         smithG(n * n, V * X, V * Y, ax, ay) * dsmithG_LV_dP_r(P_r, P_ani, n*L, L*X, L*Y, ax, ay);
 }

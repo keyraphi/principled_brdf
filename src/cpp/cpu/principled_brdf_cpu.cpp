@@ -157,9 +157,7 @@ void principled_brdf_backward_P_r_cpu_impl(
     const float *__restrict__ P_b, const float *__restrict__ P_m,
     const float *__restrict__ P_ss, const float *__restrict__ P_s,
     const float *__restrict__ P_r, const float *__restrict__ P_st,
-    const float *__restrict__ P_ani, const float *__restrict__ P_sh,
-    const float *__restrict__ P_sht, const float *__restrict__ P_c,
-    const float *__restrict__ P_cg, const float *__restrict__ n,
+    const float *__restrict__ P_ani, const float *__restrict__ n,
     float *__restrict__ result, size_t N) {
 #pragma omp parallel for
   for (size_t i = 0; i < N; ++i) {
@@ -174,7 +172,7 @@ void principled_brdf_backward_P_r_cpu_impl(
         (1.F - P_m[i]) * M_1_PIf * C_dlin(P_b_) *
             ((1.F - P_ss[i]) * dF_d_dP_r(L, V, H, P_r[i], n_) + dss_dP_r(L, V, H, P_r[i], n_)) +
         F_s(L, H, P_b_, P_m[i], P_st[i], P_s[i]) *
-            (dG_s_dP_r(L, V, H, n_, P_ani[i]) * D_s(H, n_, P_ani[i], P_r[i]) +
+            (dG_s_dP_r(L, V, P_r[i],P_ani[i], n_) * D_s(H, n_, P_ani[i], P_r[i]) +
              G_s(L, V, n_, P_ani[i], P_r[i]) * dD_s_dP_r(H, P_r[i], P_ani[i], n_));
 
     result[i * 3] = dBRDF_dP_r.x;
