@@ -1,5 +1,4 @@
 #pragma once
-#include <algorithm>
 #include <cmath>
 #include <cuda_runtime_api.h>
 
@@ -30,9 +29,7 @@ struct Vec3 {
   HOST_DEVICE Vec3 operator-(const Vec3 &rhs) const {
     return {x - rhs.x, y - rhs.y, z - rhs.z};
   }
-  HOST_DEVICE Vec3 operator-() const {
-    return {-x, -y, -z};
-  }
+  HOST_DEVICE Vec3 operator-() const { return {-x, -y, -z}; }
 
   // Scalar multiplication (both directions)
   HOST_DEVICE Vec3 operator*(float scalar) const {
@@ -431,11 +428,115 @@ HOST_DEVICE inline Vec3 dC_spec0_dP_m(const Vec3 &P_b, const float P_s,
              (Vec3{1.F, 1.F, 1.F} + P_st * (C_tint(P_b) - Vec3{1.F, 1.F, 1.F}));
 }
 HOST_DEVICE inline Vec3 dF_s_dP_m(const Vec3 &L, const Vec3 &H, const Vec3 &P_b,
-                                 const float P_st, const float P_s) {
+                                  const float P_st, const float P_s) {
   return (1.F - F_H(L, H)) * dC_spec0_dP_m(P_b, P_s, P_st);
 }
 
-// dBRDF_dP_m ////////////////////////////////////////////////////////////////
-HOST_DEVICE inline Vec3 dC_spec0_dP_s(const Vec3 &P_b, const float P_m, const float P_st) {
+// dBRDF_dP_s ////////////////////////////////////////////////////////////////
+HOST_DEVICE inline Vec3 dC_spec0_dP_s(const Vec3 &P_b, const float P_m,
+                                      const float P_st) {
   return 0.08F * mix(Vec3{1.F, 1.F, 1.F}, C_tint(P_b), P_st) * (1.F - P_m);
+}
+
+// dBRDF_dP_r ////////////////////////////////////////////////////////////////
+
+HOST_DEVICE inline float dF_d90_dP_r(const Vec3 &L, const Vec3 &H) {
+  return 2.F * (L * H) * (L * H);
+}
+HOST_DEVICE inline float dF_d_dP_r(const Vec3 &L, const Vec3 &V, const Vec3 &H,
+                                   const float P_r, const Vec3 &n) {
+  return dF_d90_dP_r(L, H) *
+         (2.F * (F_d90(L, H, P_r) - 1.F) * F_VL(n, L) * F_VL(n, V) +
+          F_VL(n, L) + F_VL(n, V));
+}
+
+HOST_DEVICE inline float dF_ss90_dP_r(const Vec3 &L, const Vec3 &H) {
+  return (L * H) * (L * H);
+}
+HOST_DEVICE inline float dF_ss_dP_r(const Vec3 &L, const Vec3 &V, const Vec3 &H,
+                                    const float P_r, const Vec3 &n) {
+  return dF_ss90_dP_r(L, H) *
+         (2.F * (F_ss90(L, H, P_r) - 1.F) * F_VL(n, L) * F_VL(n, V) +
+          F_VL(n, L) + F_VL(n, V));
+}
+HOST_DEVICE inline float dss_dP_r(const Vec3 &L, const Vec3 &V, const Vec3 &H,
+                                  const float P_r, const Vec3 &n) {
+  return 1.25F * (1.F / (fmaxf(1e-6F, n * L) + fmaxf(1e-10F, n * V)) - 0.5F) *
+         dF_ss_dP_r(L, V, H, P_r, n);
+}
+
+HOST_DEVICE inline float da_x_dP_r(const float P_r, const float P_ani) {
+  if (P_r * P_r / aspect(P_ani) < 0.01F) {
+    return 0.F;
+  }
+  return 2.F * P_r / aspect(P_ani);
+}
+HOST_DEVICE inline float da_y_dP_r(const float P_r, const float P_ani) {
+  if (P_r * P_r * aspect(P_ani) < 0.01F) {
+    return 0.F;
+  }
+  return 2 * P_r * aspect(P_ani);
+}
+HOST_DEVICE inline float dHXax_dP_r(const Vec3 &H, const Vec3 &X,
+                                    const float P_r, const float P_ani,
+                                    const float ax) {
+  return -(H * X) * da_x_dP_r(P_r, P_ani) / (ax * ax);
+}
+HOST_DEVICE inline float dHYay_dP_r(const Vec3 &H, const Vec3 &Y,
+                                    const float P_r, const float P_ani,
+                                    const float ay) {
+  return -(H * Y) * da_y_dP_r(P_r, P_ani) / (ay * ay);
+}
+HOST_DEVICE inline float dHXax2_dP_r(const Vec3 &H, const Vec3 &X,
+                                     const float P_r, const float P_ani,
+                                     const float HXax, const float ax) {
+  return 2.F * HXax * dHXax_dP_r(H, X, P_r, P_ani, ax);
+}
+HOST_DEVICE inline float dHYay2_dP_r(const Vec3 &H, const Vec3 &Y,
+                                     const float P_r, const float P_ani,
+                                     const float HYay, const float ay) {
+  return 2.F * HYay * dHYay_dP_r(H, Y, P_r, P_ani, ay);
+}
+HOST_DEVICE inline float dHXax2HYay2nH2_dP_r(const Vec3 &H, const Vec3 &X,
+                                             const Vec3 &Y, const float P_r,
+                                             const float P_ani,
+                                             const float HXax, const float HYay,
+                                             const float ax, const float ay) {
+  return dHXax2_dP_r(H, X, P_r, P_ani, HXax, ax) +
+         dHYay2_dP_r(H, Y, P_r, P_ani, HYay, ay);
+}
+HOST_DEVICE inline float
+dHXax2HYay2nH2_2_dP_r(const Vec3 &H, const Vec3 &X, const Vec3 &Y,
+                      const float P_r, const float P_ani,
+                      const float HXax2HYay2nH2, const float HXax,
+                      const float HYay, const float ax, const float ay) {
+  return 2.F * (HXax2HYay2nH2 *
+                dHXax2HYay2nH2_dP_r(H, X, Y, P_r, P_ani, HXax, HYay, ax, ay));
+}
+
+HOST_DEVICE inline float
+dnominator_dD_s_dP_r(const Vec3 &H, const Vec3 &X, const Vec3 &Y,
+                     const float P_r, const float P_ani,
+                     const float HXax2HYay2nH2, const float HXax,
+                     const float HYay, const float ax, const float ay) {
+  return M_PIf * (ay * (HXax2HYay2nH2 * HXax2HYay2nH2 * da_x_dP_r(P_r, P_ani) +
+                        ax * dHXax2HYay2nH2_2_dP_r(H, X, Y, P_r, P_ani,
+                                                   HXax2HYay2nH2, HXax, HYay,
+                                                   ax, ay))) +
+         ax * (HXax2HYay2nH2 * HXax2HYay2nH2 * da_y_dP_r(P_r, P_ani));
+}
+HOST_DEVICE inline float dD_s_dP_r(const Vec3 &H,
+                                   const float P_r, const float P_ani,
+                                   const Vec3 &n) {
+  const float ax = a_x(P_ani, P_r);
+  const float ay = a_y(P_ani, P_r);
+  const Vec3 X = Vec3{1.F, 0.F, 0.F};
+  const Vec3 Y = Vec3{0.F, 1.F, 0.F};
+  const float HXax = H * X / ax;
+  const float HYay = H * Y / ay;
+  const float nH = n * H;
+  const float HXax2HYay2nH2 = (HXax * HXax + HYay * HYay + nH * nH);
+  const float denom = (M_PIf * a_x(P_ani, P_r) * a_y(P_ani, P_r) *
+                       HXax2HYay2nH2 * HXax2HYay2nH2);
+  return dnominator_dD_s_dP_r(H, X, Y, P_r, P_ani, HXax2HYay2nH2, HXax, HYay, ax, ay) / (denom * denom);
 }
