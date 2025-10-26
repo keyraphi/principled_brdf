@@ -439,7 +439,6 @@ HOST_DEVICE inline Vec3 dC_spec0_dP_s(const Vec3 &P_b, const float P_m,
 }
 
 // dBRDF_dP_r ////////////////////////////////////////////////////////////////
-
 HOST_DEVICE inline float dF_d90_dP_r(const Vec3 &L, const Vec3 &H) {
   return 2.F * (L * H) * (L * H);
 }
@@ -551,9 +550,9 @@ HOST_DEVICE inline float dS_LV_dP_r(const float P_r, const float P_ani,
                          (LVYay * LVY) * LVY * da_y_dP_r(P_r, P_ani));
 }
 HOST_DEVICE inline float dsmithG_LV_dP_r(const float P_r, const float P_ani,
-                                        const float nLV, const float LVX,
-                                        const float LVY, const float ax,
-                                        const float ay) {
+                                         const float nLV, const float LVX,
+                                         const float LVY, const float ax,
+                                         const float ay) {
   if (nLV < 0) {
     return 0.F;
   }
@@ -569,6 +568,19 @@ HOST_DEVICE inline float dG_s_dP_r(const Vec3 &L, const Vec3 &V,
   const Vec3 X = Vec3{1.F, 0.F, 0.F};
   const Vec3 Y = Vec3{0.F, 1.F, 0.F};
 
-  return smithG(n * L, L * X, L * Y, ax, ay) * dsmithG_LV_dP_r(P_r, P_ani, n*V, V*X, V*Y, ax, ay) +
-         smithG(n * n, V * X, V * Y, ax, ay) * dsmithG_LV_dP_r(P_r, P_ani, n*L, L*X, L*Y, ax, ay);
+  return smithG(n * L, L * X, L * Y, ax, ay) *
+             dsmithG_LV_dP_r(P_r, P_ani, n * V, V * X, V * Y, ax, ay) +
+         smithG(n * n, V * X, V * Y, ax, ay) *
+             dsmithG_LV_dP_r(P_r, P_ani, n * L, L * X, L * Y, ax, ay);
+}
+
+// dBRDF_dP_st ////////////////////////////////////////////////////////////////
+HOST_DEVICE inline Vec3 dC_spec0_dP_st(const Vec3 &P_b, const float P_m,
+                                       const float P_s) {
+  return P_s * 0.08F * (C_tint(P_b) - Vec3({1.F, 1.F, 1.F})) * (1.F - P_m);
+}
+HOST_DEVICE inline Vec3 dF_s_dP_st(const Vec3 &L, const Vec3 &H,
+                                   const Vec3 &P_b, const float P_m,
+                                   const float P_s) {
+  return (1.F - F_H(L, H)) * dC_spec0_dP_st(P_b, P_m, P_s);
 }
