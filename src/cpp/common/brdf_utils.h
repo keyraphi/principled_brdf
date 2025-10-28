@@ -584,3 +584,106 @@ HOST_DEVICE inline Vec3 dF_s_dP_st(const Vec3 &L, const Vec3 &H,
                                    const float P_s) {
   return (1.F - F_H(L, H)) * dC_spec0_dP_st(P_b, P_m, P_s);
 }
+
+// dBRDF_dP_ani ////////////////////////////////////////////////////////////////
+HOST_DEVICE inline float daspect_dP_ani(const float P_ani) {
+  return -1.45F / sqrtf(1.F - 0.9F * P_ani);
+}
+
+HOST_DEVICE inline float da_x_daspect(const float P_r, const float P_ani) {
+  const float value = P_r * P_r / aspect(P_ani);
+  if (value > 0.001) {
+    return -value / aspect(P_ani);
+  }
+  return 0.F;
+}
+
+HOST_DEVICE inline float da_y_daspect(const float P_r) {
+  const float value = P_r * P_r;
+  if (value > 0.001) {
+    return value;
+  }
+  return 0.F;
+}
+
+HOST_DEVICE inline float dsmithG_LV_da_y(const float ND, const float DX,
+                                         const float DY, const float ax,
+                                         const float ay) {
+  const float S =
+      sqrtf((DX * ax) * (DX * ax) + (DY * ay) * (DY * ay) + (ND * ND));
+  const float dS_da_y = 2.F * DY * DY * ay / (2 * S);
+  return -dS_da_y / ((ND + S) * (ND + S));
+}
+HOST_DEVICE inline float dsmithG_LV_da_x(const float ND, const float DX,
+                                         const float DY, const float ax,
+                                         const float ay) {
+  const float S =
+      sqrtf((DX * ax) * (DX * ax) + (DY * ay) * (DY * ay) + (ND * ND));
+  const float dS_da_x = 2.F * DX * DX * ax / (2 * S);
+  return -dS_da_x / ((ND + S) * (ND + S));
+}
+HOST_DEVICE inline float dG_s_da_x(const Vec3 &L, const Vec3 &V,
+                                   const float P_ani, const float P_r,
+                                   const Vec3 &n) {
+  const Vec3 X = Vec3{1.F, 0.F, 0.F};
+  const Vec3 Y = Vec3{0.F, 1.F, 0.F};
+  const float ax = a_x(P_ani, P_r);
+  const float ay = a_y(P_ani, P_r);
+  const float G1 = smithG(n * L, L * X, L * Y, ax, ay);
+  const float G2 = smithG(n * V, V * X, V * Y, ax, ay);
+  return G2 * dsmithG_LV_da_x(n * L, L * X, L * Y, ax, ay) +
+         G1 * dsmithG_LV_da_x(n * V, V * X, V * Y, ax, ay);
+}
+HOST_DEVICE inline float dG_s_da_y(const Vec3 &L, const Vec3 &V,
+                                   const float P_ani, const float P_r,
+                                   const Vec3 &n) {
+  const Vec3 X = Vec3{1.F, 0.F, 0.F};
+  const Vec3 Y = Vec3{0.F, 1.F, 0.F};
+  const float ax = a_x(P_ani, P_r);
+  const float ay = a_y(P_ani, P_r);
+  const float G1 = smithG(n * L, L * X, L * Y, ax, ay);
+  const float G2 = smithG(n * V, V * X, V * Y, ax, ay);
+  return G2 * dsmithG_LV_da_y(n * L, L * X, L * Y, ax, ay) +
+         G1 * dsmithG_LV_da_y(n * V, V * X, V * Y, ax, ay);
+}
+HOST_DEVICE inline float dD_s_da_x(const Vec3 &H, const float P_r,
+                                   const float P_ani, const Vec3 &n) {
+  const Vec3 X = Vec3{1.F, 0.F, 0.F};
+  const Vec3 Y = Vec3{0.F, 1.F, 0.F};
+  const float ax = a_x(P_ani, P_r);
+  const float ay = a_y(P_ani, P_r);
+  const float E = (H * X / ax) * (H * X / ax) + (H * Y / ay) * (H * Y / ay) +
+                  (n * H) * (n * H);
+  return -D_s(H, n, P_ani, P_r) *
+         (1.F / ax - (4.F * (H * X) * (H * X)) / (E * ax * ax * ax));
+}
+HOST_DEVICE inline float dD_s_da_y(const Vec3 &H, const float P_r,
+                                   const float P_ani, const Vec3 &n) {
+  const Vec3 X = Vec3{1.F, 0.F, 0.F};
+  const Vec3 Y = Vec3{0.F, 1.F, 0.F};
+  const float ax = a_x(P_ani, P_r);
+  const float ay = a_y(P_ani, P_r);
+  const float E = (H * X / ax) * (H * X / ax) + (H * Y / ay) * (H * Y / ay) +
+                  (n * H) * (n * H);
+  return -D_s(H, n, P_ani, P_r) *
+         (1.F / ay - (4.F * (H * Y) * (H * Y)) / (E * ay * ay * ay));
+}
+HOST_DEVICE inline Vec3 dBRDF_da_x(const Vec3 &L, const Vec3 &V, const Vec3 &H,
+                                   const Vec3 &P_b, const float P_m,
+                                   const float P_st, const float P_s,
+                                   const float P_ani, const float P_r,
+                                   const Vec3 &n) {
+  return F_s(L, H, P_b, P_m, P_st, P_s) *
+         (D_s(H, n, P_ani, P_r) * dG_s_da_x(L, V, P_ani, P_r, n) +
+          G_s(L, V, n, P_ani, P_r) * dD_s_da_x(H, P_r, P_ani, n));
+}
+
+HOST_DEVICE inline Vec3 dBRDF_da_y(const Vec3 &L, const Vec3 &V, const Vec3 &H,
+                                   const Vec3 &P_b, const float P_m,
+                                   const float P_st, const float P_s,
+                                   const float P_ani, const float P_r,
+                                   const Vec3 &n) {
+  return F_s(L, H, P_b, P_m, P_st, P_s) *
+         (D_s(H, n, P_ani, P_r) * dG_s_da_y(L, V, P_ani, P_r, n) +
+          G_s(L, V, n, P_ani, P_r) * dD_s_da_y(H, P_r, P_ani, n));
+}

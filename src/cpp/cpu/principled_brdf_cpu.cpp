@@ -208,3 +208,32 @@ void principled_brdf_backward_P_st_cpu_impl(
     result[(i * 3) + 2] = dBRDF_dP_st.z;
   }
 }
+
+void principled_brdf_backward_P_ani_cpu_impl(
+    const float *__restrict__ omega_i, const float *__restrict__ omega_o,
+    const float *__restrict__ P_b, const float *__restrict__ P_m,
+    const float *__restrict__ P_s, const float *__restrict__ P_r,
+    const float *__restrict__ P_st, const float *__restrict__ P_ani,
+    const float *__restrict__ n, float *__restrict__ result, size_t N) {
+#pragma omp parallel for
+  for (size_t i = 0; i < N; ++i) {
+    const Vec3 L(omega_i[i * 3], omega_i[(i * 3) + 1], omega_i[(i * 3) + 2]);
+    const Vec3 V(omega_o[i * 3], omega_o[(i * 3) + 1], omega_o[(i * 3) + 2]);
+    const Vec3 H = (V + L).normalize();
+
+    Vec3 n_{n[i * 3], n[(i * 3) + 1], n[(i * 3) + 2]};
+    Vec3 P_b_{P_b[i * 3], P_b[(i * 3) + 1], P_b[(i * 3) + 2]};
+
+    const Vec3 dBRDF_dP_ani =
+        dBRDF_da_x(L, V, H, P_b_, P_m[i], P_st[i], P_s[i], P_ani[i], P_r[i],
+                   n_) *
+            da_x_daspect(P_r[i], P_ani[i]) * daspect_dP_ani(P_ani[i]) +
+        dBRDF_da_y(L, V, H, P_b_, P_m[i], P_st[i], P_s[i], P_ani[i], P_r[i],
+                   n_) *
+            da_y_daspect(P_r[i]) * daspect_dP_ani(P_ani[i]);
+
+    result[i * 3] = dBRDF_dP_ani.x;
+    result[(i * 3) + 1] = dBRDF_dP_ani.y;
+    result[(i * 3) + 2] = dBRDF_dP_ani.z;
+  }
+}
