@@ -1187,7 +1187,7 @@ use the chain rule to write the partial derivative as follows:
 &= -\frac{0.45}{\sqrt{1 - 0.9 P_{ani}}}
 \end{align}
 
-### $\frac{\partial a_x}{\partial \text{aspect}}$ 
+### $\frac{\partial a_x}{\partial \text{aspect}}$
 
 \begin{align}
 \frac{\partial a_x}{\partial \text{aspect}} &=
@@ -1232,7 +1232,7 @@ D_r\right) \\
 \begin{align}
 G_1 &= \text{smithG}(\mathbf{n} \cdot \mathbf{L}, \mathbf{L} \cdot \mathbf{X}, \mathbf{L} \cdot \mathbf{Y}, a_x, a_y) \\
 G_2 &= \text{smithG}(\mathbf{n} \cdot \mathbf{V}, \mathbf{V} \cdot \mathbf{X}, \mathbf{V} \cdot \mathbf{Y}, a_x, a_y) \\
-G_s &= G_1 \cdot G_2 
+G_s &= G_1 \cdot G_2
 \end{align}
 
 Using the product rule:
@@ -1248,7 +1248,7 @@ S &= \sqrt{(DX \cdot a_x)^{2} + (DY \cdot a_y)^{2} + ND^{2}}
 
 Then just like in the derivation of the partial derivative w.r.t. $P_r$ we get:
 \begin{align}
-\frac{\partial \text{smithG}}{\partial a_{xy}} &= -\frac{1}{(ND + S)^{2}} \cdot \frac{\partial S}{\partial a_{xy}} 
+\frac{\partial \text{smithG}}{\partial a_{xy}} &= -\frac{1}{(ND + S)^{2}} \cdot \frac{\partial S}{\partial a_{xy}}
 \end{align}
 
 With
@@ -1263,17 +1263,17 @@ Now concretely for $a_x$:
 \begin{align}
 \frac{\partial S}{\partial a_x} &=
 \frac{1}{2\cdot S} \frac{\partial}{\partial a_x}\left((DX \cdot a_x)^{2} + (DY \cdot a_y)^{2} + ND^{2}\right)\\
-&= 
+&=
 \frac{1}{2\cdot S} \frac{\partial}{\partial a_x} (DX \cdot a_x)^{2} \\
 &=
 \frac{2 \cdot DX \cdot a_x \cdot DX}{2\cdot S} \\
 &=
-\frac{2 \cdot DX^{2} \cdot a_x}{2\cdot S} 
+\frac{2 \cdot DX^{2} \cdot a_x}{2\cdot S}
 \end{align}
 And Similarly for $a_y$:
 \begin{align}
 \frac{\partial S}{\partial a_y} &=
-\frac{2 \cdot DY^{2} \cdot a_y}{2\cdot S} 
+\frac{2 \cdot DY^{2} \cdot a_y}{2\cdot S}
 \end{align}
 
 
@@ -1411,6 +1411,7 @@ D_r \\
 
 
 ## $\frac{\partial}{\partial P_{cg}} BRDF$
+
 \begin{align}
 \frac{\partial \text{BRDF}}{\partial P_{cg}} &=
 \frac{\partial}{\partial P_{cg}}\left(\frac{1}{\pi} \text{mix}(F_d, ss,
@@ -1422,69 +1423,46 @@ P_{ss}) \cdot \mathbf{C_{dlin}} +
 0.25\cdot P_c\cdot G_r \cdot F_r \cdot \frac{\partial}{\partial P_{cg}}D_r \\
 \end{align}
 
+### $\frac{\partial}{\partial P_{cg}} D_r$
+$P_{cg}$ only affects the $D_r$ through $a_2$:
 
-
-### $\frac{\partial}{\partial P_{cg}}D_r$
+So with the chain rule:
 \begin{align}
-\frac{\partial}{\partial P_{cg}} D_r &=
- \frac{\partial}{\partial P_{cg}} \frac{a_2 - 1}{\pi\cdot\log(a_2)\cdot
-(1+(a_2-1)\cdot(\mathbf{n}\cdot\mathbf{H})^{2})}\\
+\frac{\partial D_r}{\partial P_{cg}} &= \frac{\partial D_r}{\partial a_2} \cdot \frac{\partial a_2}{\partial P_{cg}}
+\end{align}
+
+### $\frac{\partial}{\partial a_2} D_r$
+\begin{align}
+\frac{\partial D_r}{\partial a_2}
 &=
-\frac{
-\pi\cdot\log(a_2)\cdot
-(1+(a_2-1)\cdot(\mathbf{n}\cdot\mathbf{H})^{2})\cdot
-\frac{\partial}{\partial P_{cg}} a_2  -
- (a_2 - 1) \cdot
- \frac{\partial}{\partial P_{cg}}\left[
- \pi\cdot\log(a_2)\cdot\left(1+(a_2-1)\cdot (\mathbf{n}\cdot\mathbf{H})^{2}\right)
-\right]}
-{\left(\pi\cdot\log(a_2)\cdot
-(1+(a_2-1)\cdot(\mathbf{n}\cdot\mathbf{H})^{2})\right)^{2}}
+\frac{\partial }{\partial a_2} \frac{a_2 - 1}{\pi\cdot\log(a_2)\cdot
+(1+(a_2-1)\cdot (\mathbf{n}\cdot\mathbf{H})^{2})}
 \end{align}
 
+!!! Note
+      $\log(a_2)$ can approach 0 if a_2 gets very close to 1. However this would only happen for $P_{cg} \approx 3.2639$ or $P_{cg} \approx -3.0639$. These are not valid input values for which the BRDF is defined, so we don't handel this case here. 
 
-!!! Warn
-    $\log(a_2)$ can approach 0 if a_2 gets very close to 1.
-
-### $\frac{\partial}{\partial P_{cg}}\left[\pi\cdot\log(a2)\cdot\left(1+(a_2-1)\cdot(\mathbf{n}\cdot\mathbf{H})^{2}\right)\right]$
-
+For simplicity lets write:
 \begin{align}
-\frac{\partial}{\partial P_{cg}}\left[\pi\cdot\log(a2)\cdot\left(1+(a_2-1)\cdot(\mathbf{n}\cdot\mathbf{H})^{2}\right)\right]
-&=
-\pi \cdot \left(
-\left(1+(a_2-1)\cdot(\mathbf{n}\cdot\mathbf{H})^{2}\right) \cdot
- \frac{\partial}{\partial P_{cg}}\left[
- \log(a2)\right]
-+
-\log(a2) \cdot
- \frac{\partial}{\partial P_{cg}}\left[
-1+(a_2-1)\cdot(\mathbf{n}\cdot\mathbf{H})^{2}\right]
-\right) \\
- &=
-\pi \left(\cdot
-\left(1+(a_2-1)\cdot(\mathbf{n}\cdot\mathbf{H})^{2}\right) \cdot
- \frac{\partial}{\partial P_{cg}}\left[
- \log(a2)\right]
-+
-\log(a2) \cdot
-(\mathbf{n}\cdot\mathbf{H})^{2}
- \frac{\partial}{\partial P_{cg}}\left[
-a_2\right]
-\right) \\
+N &= a_2 - 1 \quad\text{(numerator)} \\
+D &= \pi \cdot \log(a_2) \cdot (1 + N \cdot (\mathbf{n} \cdot \mathbf{H})^{2}) \quad\text{(denominator)}
 \end{align}
 
-
-
-### $\frac{\partial}{\partial P_{cg}} \log(a_2)$
+Using the quotient rule:
 \begin{align}
-\frac{\partial}{\partial P_{cg}} \log(a_2) &=
-\frac{\frac{\partial}{\partial P_{cg}} a_2}
-{a_2}
+\frac{\partial D_r}{\partial a_2} &= \frac{\frac{\partial N}{\partial a_2} \cdot D - N \cdot \frac{\partial D}{\partial a_2}}{D^{2}}
 \end{align}
 
+With
+\begin{align}
+\frac{\partial N}{\partial a_2} &= 1 \\
+\frac{\partial D}{\partial a_2} &=
+\pi \left( \frac{1}{a_2} \cdot (1 + N \cdot (\mathbf{n} \cdot \mathbf{H})^{2}) + \log(a_2) \cdot (\mathbf{n} \cdot \mathbf{H})^{2} \right)
+\end{align}
 
 
 ### $\frac{\partial}{\partial P_{cg}} a_2$
+
 \begin{align}
 \frac{\partial}{\partial P_{cg}} a_2 &=
 \text{mix}(0.1, 0.001, P_{cg})^{2}\\
@@ -1502,7 +1480,6 @@ a_2\right]
 &=
 -0.198 \cdot \left(0.1 - 0.099\cdot P_{cg} \right)
 \end{align}
-
 
 
 ## $\frac{\partial}{\partial \mathbf{n}} BRDF$
