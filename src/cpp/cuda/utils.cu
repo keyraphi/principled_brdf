@@ -4,12 +4,12 @@
 #include <cuda_runtime_api.h>
 #include <driver_types.h>
 #include <nanobind/ndarray.h>
+#include <optional>
 #include <stdexcept>
 #include <thrust/device_ptr.h>
 #include <thrust/fill.h>
 #include <vector>
 #include <vector_functions.h>
-#include <optional>
 
 namespace nb = nanobind;
 
@@ -87,21 +87,20 @@ auto get_cuda_device_from_ndarray(const void *data_ptr) -> int {
 }
 
 // Overload for multiple arrays - picks the first valid one
-auto get_commond_cuda_device(
-const Vec3ArrayCUDA &omega_i,
-                            const Vec3ArrayCUDA &omega_o,
-                            const FlexVec3CUDA &P_b,
-                            const ::std::optional<FlexScalarCUDA> &P_m,
-                            const ::std::optional<FlexScalarCUDA> &P_ss,
-                            const ::std::optional<FlexScalarCUDA> &P_s,
-                            const ::std::optional<FlexScalarCUDA> &P_r,
-                            const ::std::optional<FlexScalarCUDA> &P_st,
-                            const ::std::optional<FlexScalarCUDA> &P_ani,
-                            const ::std::optional<FlexScalarCUDA> &P_sh,
-                            const ::std::optional<FlexScalarCUDA> &P_sht,
-                            const ::std::optional<FlexScalarCUDA> &P_c,
-                            const ::std::optional<FlexScalarCUDA> &P_cg,
-                            const ::std::optional<FlexVec3CUDA> &n) -> int {
+auto get_commond_cuda_device(const Vec3ArrayCUDA &omega_i,
+                             const Vec3ArrayCUDA &omega_o,
+                            const ::std::optional<FlexVec3CUDA> &P_b,
+                             const ::std::optional<FlexScalarCUDA> &P_m,
+                             const ::std::optional<FlexScalarCUDA> &P_ss,
+                             const ::std::optional<FlexScalarCUDA> &P_s,
+                             const ::std::optional<FlexScalarCUDA> &P_r,
+                             const ::std::optional<FlexScalarCUDA> &P_st,
+                             const ::std::optional<FlexScalarCUDA> &P_ani,
+                             const ::std::optional<FlexScalarCUDA> &P_sh,
+                             const ::std::optional<FlexScalarCUDA> &P_sht,
+                             const ::std::optional<FlexScalarCUDA> &P_c,
+                             const ::std::optional<FlexScalarCUDA> &P_cg,
+                             const ::std::optional<FlexVec3CUDA> &n) -> int {
   // Check all arrays and return the first valid device
   ::std::vector<int> devices;
 
@@ -111,8 +110,8 @@ const Vec3ArrayCUDA &omega_i,
   if (omega_o.size() > 0) {
     devices.push_back(cuda::get_cuda_device_from_ndarray(omega_o.data()));
   }
-  if (P_b.size() > 0) {
-    devices.push_back(cuda::get_cuda_device_from_ndarray(P_b.data()));
+  if (P_b.has_value() && P_b->size() > 0) {
+    devices.push_back(cuda::get_cuda_device_from_ndarray(P_b->data()));
   }
   if (P_m.has_value() && P_m->size() > 0) {
     devices.push_back(cuda::get_cuda_device_from_ndarray(P_m->data()));

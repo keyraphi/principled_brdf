@@ -687,3 +687,18 @@ HOST_DEVICE inline Vec3 dBRDF_da_y(const Vec3 &L, const Vec3 &V, const Vec3 &H,
          (D_s(H, n, P_ani, P_r) * dG_s_da_y(L, V, P_ani, P_r, n) +
           G_s(L, V, n, P_ani, P_r) * dD_s_da_y(H, P_r, P_ani, n));
 }
+
+// dBRDF_dP_sh ////////////////////////////////////////////////////////////////
+HOST_DEVICE inline Vec3 dF_sheen_dP_sh(const Vec3 &L, const Vec3 &H,
+                                       const Vec3 &P_b, const float P_sht) {
+  return F_H(L, H) * C_sheen(P_b, P_sht);
+}
+
+// dBRDF_dP_sht ////////////////////////////////////////////////////////////////
+HOST_DEVICE inline Vec3 dC_sheen_dP_sht(const Vec3 &P_b){
+  return C_tint(P_b) - Vec3{1.F, 1.F, 1.F};
+}
+HOST_DEVICE inline Vec3 dF_sheen_dP_sht(const Vec3 &L, const Vec3 &H,
+                                       const Vec3 &P_b, const float P_sh) {
+  return F_H(L, H) * P_sh * dC_sheen_dP_sht(P_b);
+}

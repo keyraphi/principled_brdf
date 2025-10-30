@@ -36,7 +36,7 @@ auto get_cuda_device_from_ndarray(const nb::ndarray<nb::device::cuda> &arr)
 // set cuda device to common device of inputs
 auto get_common_cuda_device(const Vec3ArrayCUDA &omega_i,
                             const Vec3ArrayCUDA &omega_o,
-                            const FlexVec3CUDA &P_b,
+                            const ::std::optional<FlexVec3CUDA> &P_b,
                             const ::std::optional<FlexScalarCUDA> &P_m,
                             const ::std::optional<FlexScalarCUDA> &P_ss,
                             const ::std::optional<FlexScalarCUDA> &P_s,
