@@ -969,12 +969,11 @@ __global__ void principled_brdf_backward_P_c_kernel(
   const Vec3 H = (V + L).normalize();
 
   // Multiply 1 vector - each color channel gets same derivative
-  const Vec3 dBRDF_dP_c =
-      Vec3{1.F, 1.F, 1.F} * 0.25F * G_r(L, V, n) * F_r(L, H) * D_r(H, n, P_cg);
+  const float dBRDF_dP_c = 0.25F * G_r(L, V, n) * F_r(L, H) * D_r(H, n, P_cg);
   // write out result
-  result[(3 * global_id)] = dBRDF_dP_c.x;
-  result[(3 * global_id) + 1] = dBRDF_dP_c.y;
-  result[(3 * global_id) + 2] = dBRDF_dP_c.z;
+  result[(3 * global_id)] = dBRDF_dP_c;
+  result[(3 * global_id) + 1] = dBRDF_dP_c;
+  result[(3 * global_id) + 2] = dBRDF_dP_c;
 }
 
 extern "C" void principled_brdf_backward_P_c_cuda_impl(
@@ -989,6 +988,84 @@ extern "C" void principled_brdf_backward_P_c_cuda_impl(
   principled_brdf_backward_P_c_kernel<<<N_BLOCKS, N_THREADS,
                                         shared_memory_bytes>>>(
       omega_i, omega_o, P_cg, n, result, N);
+  // DEBUGGING
+  // Synchronize and check for errors
+  cudaError_t err = cudaDeviceSynchronize();
+  if (err != cudaSuccess) {
+    // Clean up on error
+    cudaFree(result);
+    throw std::runtime_error("CUDA kernel execution failed");
+  }
+
+  // Check for kernel launch errors
+  err = cudaGetLastError();
+  if (err != cudaSuccess) {
+    cudaFree(result);
+    throw std::runtime_error("CUDA kernel launch failed");
+  }
+}
+
+__global__ void principled_brdf_backward_P_cg_kernel(
+    const float *__restrict__ omega_i_, const float *__restrict__ omega_o_,
+    const float *__restrict__ P_c_, const float *__restrict__ P_cg_,
+    const float *__restrict__ n_, float *__restrict__ result, size_t N) {
+  uint32_t global_id = threadIdx.x + blockDim.x * blockIdx.x;
+
+  // shared memory for coalesced reads from global
+  extern __shared__ float sh_mem[];
+
+  const int OMEGA_O_OFFSET = 3;
+  const int N_OFFSET = 6;
+
+  float *s_omega_i = sh_mem;
+  float *s_omega_o = sh_mem + (OMEGA_O_OFFSET * N);
+  float *s_n = sh_mem + (N_OFFSET * N);
+
+#pragma unroll
+  for (int i = 0; i < 3; ++i) {
+    s_omega_i[threadIdx.x + (i * blockDim.x)] =
+        omega_i_[(3 * global_id) + (i * blockDim.x)];
+    s_omega_o[threadIdx.x + (i * blockDim.x)] =
+        omega_o_[(3 * global_id) + (i * blockDim.x)];
+    s_n[threadIdx.x + (i * blockDim.x)] =
+        n_[(3 * global_id) + (i * blockDim.x)];
+  }
+  __syncthreads();
+
+  // read into registers coalesced and without bank conflicts
+  const Vec3 L(s_omega_i[3 * threadIdx.x], s_omega_i[(3 * threadIdx.x) + 1],
+               s_omega_i[(3 * threadIdx.x) + 2]);
+  const Vec3 V(s_omega_o[3 * threadIdx.x], s_omega_o[(3 * threadIdx.x) + 1],
+               s_omega_o[(3 * threadIdx.x) + 2]);
+  const Vec3 n(s_n[3 * threadIdx.x], s_n[(3 * threadIdx.x) + 1],
+               s_n[(3 * threadIdx.x) + 2]);
+  const float P_c = P_c_[threadIdx.x];
+  const float P_cg = P_cg_[threadIdx.x];
+
+  // compute brdf
+  const Vec3 H = (V + L).normalize();
+
+  // Multiply 1 vector - each color channel gets same derivative
+  const float dBRDF_dP_cg =
+      0.25F * P_c * G_r(L, V, n) * F_r(L, H) * dD_r_dP_cg(H, P_cg, n);
+  // write out result
+  result[(3 * global_id)] = dBRDF_dP_cg;
+  result[(3 * global_id) + 1] = dBRDF_dP_cg;
+  result[(3 * global_id) + 2] = dBRDF_dP_cg;
+}
+
+extern "C" void principled_brdf_backward_P_cg_cuda_impl(
+    const float *__restrict__ omega_i, const float *__restrict__ omega_o,
+    const float *__restrict__ P_c, const float *__restrict__ P_cg,
+    const float *__restrict__ n, float *__restrict__ result, size_t N) {
+
+  const size_t N_BLOCKS = (N + N_THREADS - 1) / N_THREADS;
+
+  // shared memory for coalesced read in of float3s
+  const size_t shared_memory_bytes = sizeof(float) * 9 * N;
+  principled_brdf_backward_P_cg_kernel<<<N_BLOCKS, N_THREADS,
+                                        shared_memory_bytes>>>(
+      omega_i, omega_o, P_c, P_cg, n, result, N);
   // DEBUGGING
   // Synchronize and check for errors
   cudaError_t err = cudaDeviceSynchronize();

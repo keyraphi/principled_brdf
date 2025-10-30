@@ -73,7 +73,14 @@ void principled_brdf_backward_P_sht_cpu_impl(
     const float *__restrict__ P_b, const float *__restrict__ P_m,
     const float *__restrict__ P_sh, float *__restrict__ result, size_t N);
 
-void principled_brdf_backward_P_c_cpu_impl(
+void principled_brdf_backward_P_c_cpu_impl(const float *__restrict__ omega_i,
+                                           const float *__restrict__ omega_o,
+                                           const float *__restrict__ P_cg,
+                                           const float *__restrict__ n,
+                                           float *__restrict__ result,
+                                           size_t N);
+
+void principled_brdf_backward_P_cg_cpu_impl(
     const float *__restrict__ omega_i, const float *__restrict__ omega_o,
-    const float *__restrict__ P_cg, const float *__restrict__ n,
-    float *__restrict__ result, size_t N);
+    const float *__restrict__ P_c, const float *__restrict__ P_cg,
+    const float *__restrict__ n, float *__restrict__ result, size_t N);

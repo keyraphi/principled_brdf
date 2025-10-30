@@ -7,7 +7,7 @@ include(FetchContent)
 FetchContent_Declare(
     nanobind
     GIT_REPOSITORY https://github.com/wjakob/nanobind
-    GIT_TAG        master
+    GIT_TAG master
 )
 FetchContent_MakeAvailable(nanobind)
 
@@ -30,8 +30,9 @@ nanobind_add_module(principled_brdf_functions
 )
 
 # CUDA compilation flags
-target_compile_options(principled_brdf_functions PRIVATE 
-    $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>
+target_compile_options(
+    principled_brdf_functions
+    PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>
 )
 
 # Link dependencies
@@ -40,13 +41,15 @@ target_link_libraries(principled_brdf_functions PRIVATE CUDA::cudart)
 target_link_libraries(principled_brdf_functions PRIVATE common_utils)
 # C++ standard
 target_compile_features(principled_brdf_functions PRIVATE cxx_std_17)
-target_compile_options(principled_brdf_functions PRIVATE
-    -Wall
-    -Wextra
-    $<$<COMPILE_LANGUAGE:CUDA>:-Xptxas="-v">
+target_compile_options(
+    principled_brdf_functions
+    PRIVATE -Wall -Wextra $<$<COMPILE_LANGUAGE:CUDA>:-Xptxas="-v">
 )
 # for clangd
-target_include_directories(principled_brdf_functions PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(
+    principled_brdf_functions
+    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
+)
 
 # use OpenMP in c++ implementation
 find_package(OpenMP)
@@ -56,9 +59,11 @@ endif()
 
 # RPATH for Unix
 if(UNIX)
-    set_target_properties(principled_brdf_functions PROPERTIES INSTALL_RPATH "$ORIGIN")
+    set_target_properties(
+        principled_brdf_functions
+        PROPERTIES INSTALL_RPATH "$ORIGIN"
+    )
 endif()
-
 
 # Install the C++ extension to the current Python's site-packages
 # Prefer Python from the current environment
@@ -77,12 +82,14 @@ message(STATUS "Python library: ${Python_LIBRARIES}")
 
 # Get Python package installation directory
 execute_process(
-    COMMAND ${Python_EXECUTABLE} -c "import site; print(site.getsitepackages()[0])"
+    COMMAND
+        ${Python_EXECUTABLE} -c "import site; print(site.getsitepackages()[0])"
     OUTPUT_VARIABLE PYTHON_SITE_PACKAGES
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 message(STATUS "Python site-packages: ${PYTHON_SITE_PACKAGES}")
 
-install(TARGETS principled_brdf_functions
+install(
+    TARGETS principled_brdf_functions
     LIBRARY DESTINATION ${Python_SITEARCH}
 )

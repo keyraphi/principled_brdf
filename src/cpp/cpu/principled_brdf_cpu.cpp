@@ -294,12 +294,35 @@ void principled_brdf_backward_P_c_cpu_impl(const float *__restrict__ omega_i,
 
     Vec3 n_{n[i * 3], n[(i * 3) + 1], n[(i * 3) + 2]};
 
-    // Multiply 1 vector - each color channel gets same derivative
-    const Vec3 dBRDF_dP_c = Vec3{1.F, 1.F, 1.F} * 0.25F * G_r(L, V, n_) *
+    const float dBRDF_dP_c = 0.25F * G_r(L, V, n_) *
                              F_r(L, H) * D_r(H, n_, P_cg[i]);
 
-    result[i * 3] = dBRDF_dP_c.x;
-    result[(i * 3) + 1] = dBRDF_dP_c.y;
-    result[(i * 3) + 2] = dBRDF_dP_c.z;
+    result[i * 3] = dBRDF_dP_c;
+    result[(i * 3) + 1] = dBRDF_dP_c;
+    result[(i * 3) + 2] = dBRDF_dP_c;
+  }
+}
+
+void principled_brdf_backward_P_cg_cpu_impl(const float *__restrict__ omega_i,
+                                            const float *__restrict__ omega_o,
+                                            const float *__restrict__ P_c,
+                                            const float *__restrict__ P_cg,
+                                            const float *__restrict__ n,
+                                            float *__restrict__ result,
+                                            size_t N) {
+#pragma omp parallel for
+  for (size_t i = 0; i < N; ++i) {
+    const Vec3 L(omega_i[i * 3], omega_i[(i * 3) + 1], omega_i[(i * 3) + 2]);
+    const Vec3 V(omega_o[i * 3], omega_o[(i * 3) + 1], omega_o[(i * 3) + 2]);
+    const Vec3 H = (V + L).normalize();
+
+    Vec3 n_{n[i * 3], n[(i * 3) + 1], n[(i * 3) + 2]};
+
+    const float dBRDF_dP_cg = 
+      0.25F * P_c[i] * G_r(L, V, n_) * F_r(L, H) * dD_r_dP_cg(H, P_cg[i], n_);
+
+    result[i * 3] = dBRDF_dP_cg;
+    result[(i * 3) + 1] = dBRDF_dP_cg;
+    result[(i * 3) + 2] = dBRDF_dP_cg;
   }
 }

@@ -695,10 +695,29 @@ HOST_DEVICE inline Vec3 dF_sheen_dP_sh(const Vec3 &L, const Vec3 &H,
 }
 
 // dBRDF_dP_sht ////////////////////////////////////////////////////////////////
-HOST_DEVICE inline Vec3 dC_sheen_dP_sht(const Vec3 &P_b){
+HOST_DEVICE inline Vec3 dC_sheen_dP_sht(const Vec3 &P_b) {
   return C_tint(P_b) - Vec3{1.F, 1.F, 1.F};
 }
 HOST_DEVICE inline Vec3 dF_sheen_dP_sht(const Vec3 &L, const Vec3 &H,
-                                       const Vec3 &P_b, const float P_sh) {
+                                        const Vec3 &P_b, const float P_sh) {
   return F_H(L, H) * P_sh * dC_sheen_dP_sht(P_b);
+}
+
+// dBRDF_dP_cg ////////////////////////////////////////////////////////////////
+HOST_DEVICE inline float dD_r_da_2(const Vec3 &H, const float P_cg,
+                                   const Vec3 &n) {
+  const float N = a_2(P_cg) - 1.F;
+  const float nH = n * H;
+  const float D = M_PIf * logf(a_2(P_cg)) * (1.F + N * nH * nH);
+  const float dN_da_2 = 1.F;
+  const float dD_da_2 = M_PIf * ((1.F / a_2(P_cg)) * (1 + N * nH * nH) +
+                                 logf(a_2(P_cg) * nH * nH));
+  return (dN_da_2 * D - N * dD_da_2) / (D * D);
+}
+HOST_DEVICE inline float da_2_dP_cg(const float P_cg) {
+  return -0.198F * (0.1F - 0.099F * P_cg);
+}
+HOST_DEVICE inline float dD_r_dP_cg(const Vec3 &H, const float P_cg,
+                                    const Vec3 &n) {
+  return dD_r_da_2(H, P_cg, n) * da_2_dP_cg(P_cg);
 }
