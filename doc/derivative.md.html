@@ -1482,688 +1482,225 @@ With
 \end{align}
 
 
-## $\frac{\partial}{\partial \mathbf{n}} BRDF$
+## $\nabla_{\mathbf{n}}$ BRDF
+
+Gradient of BRDF with Respect to the Normal $\mathbf{n}$
+
+We derive the 3×3 Jacobian matrix $\nabla_{\mathbf{n}} \text{BRDF}$ using the full gradient approach. The BRDF consists of three main terms:
 
 \begin{align}
-\frac{\partial}{\partial \mathbf{n}} BRDF &=
-\frac{\partial}{\partial \mathbf{n}}\left(\frac{1}{\pi} \text{mix}(F_d, ss,
-P_{ss}) \cdot \mathbf{C_{dlin}} +
-\mathbf{F_{sheen}}\right) \cdot (1 - P_{m}) \\
-& + \frac{\partial}{\partial \mathbf{n}}G_s\cdot \mathbf{F_s} \cdot D_s \\
-& + \frac{\partial}{\partial \mathbf{n}}0.25\cdot P_c\cdot G_r \cdot F_r \cdot D_r \\
+\nabla_{\mathbf{n}}\text{BRDF} &=
+\nabla_{\mathbf{n}}\left[\left(\frac{1}{\pi} \text{mix}(F_d, ss, P_{ss}) \cdot \mathbf{C_{dlin}} + \mathbf{F_{sheen}}\right) \cdot (1 - P_{m})\right] +  \\
+&\quad \nabla_{\mathbf{n}}\left[ G_s \cdot \mathbf{F_s} \cdot D_s\right] +\\ 
+&\quad \nabla_{\mathbf{n}} \left[0.25 \cdot P_c \cdot G_r \cdot F_r \cdot D_r\right]\\
+&=
+(1 - P_m) \cdot \left[ \frac{1}{\pi} \cdot \mathbf{C_{dlin}} \otimes \nabla_{\mathbf{n}} \text{mix}(F_d, ss, P_{ss}) \right] \\
+&\quad + \mathbf{F_s} \otimes \left( D_s \cdot \nabla_{\mathbf{n}} G_s + G_s \cdot \nabla_{\mathbf{n}} D_s \right) \\
+&\quad + 0.25 \cdot P_c \cdot F_r \cdot \mathbf{1} \otimes \left( D_r \cdot \nabla_{\mathbf{n}} G_r + G_r \cdot \nabla_{\mathbf{n}} D_r \right)
 \end{align}
 
-Part1:
+!!! Note
+      The derivatives of scalar terms w.r.t. to the normal are themselfs $1\times 3$ gradient vectors. We explicitly show the outer product as $\otimes$, which yields a $3\times 3$ matrix.
+
+### $\nabla_{\mathbf{n}} \text{mix}(F_d, ss, P_{ss})$
+
 \begin{align}
-\frac{\partial}{\partial \mathbf{n}}\left(\frac{1}{\pi} \text{mix}(F_d, ss,
-P_{ss}) \cdot \mathbf{C_{dlin}} +
-\mathbf{F_{sheen}}\right) \cdot (1 - P_{m}) &=
- (1 - P_{m}) \cdot \frac{1}{\pi} \cdot \mathbf{C_{dlin}}
- \frac{\partial}{\partial \mathbf{n}} \text{mix}(F_d, ss, P_{ss})
-\end{align}
-
-Part2:
-\begin{align}
-\frac{\partial}{\partial \mathbf{n}}G_s\cdot \mathbf{F_s} \cdot D_s &=
-\mathbf{F_s} \cdot \frac{\partial}{\partial \mathbf{n}}\left(
-G_s\cdot  D_s
-\right) \\
-&=
-\mathbf{F_s} \cdot \left( D_s \cdot \frac{\partial}{\partial \mathbf{n}}
-G_s
-+ G_s\cdot \frac{\partial}{\partial \mathbf{n}}D_s
-\right)
-\end{align}
-
-Part3:
-\begin{align}
-\frac{\partial}{\partial \mathbf{n}}0.25\cdot P_c\cdot G_r \cdot F_r \cdot D_r &=
-0.25\cdot F_r \cdot \frac{\partial}{\partial \mathbf{n}} \left(G_r \cdot D_r\right)\\
-&=
-0.25\cdot F_r \cdot \left(D_r \cdot \frac{\partial}{\partial \mathbf{n}} G_r +
- G_r \cdot \frac{\partial}{\partial \mathbf{n}} D_r
-\right)\\
-\end{align}
-
-
-
-
-
-### $\frac{\partial}{\partial \mathbf{n}} \text{mix}(F_d, ss, P_{ss})$
-\begin{align}
-\frac{\partial}{\partial \mathbf{n}} \text{mix}(F_d, ss, P_{ss}) &=
-\frac{\partial}{\partial \mathbf{n}} \left(F_d + P_{ss} (ss - F_d)\right)\\
-&=
-\frac{\partial}{\partial \mathbf{n}} F_d +
-P_{ss} \cdot \left(
-\frac{\partial}{\partial \mathbf{n}} ss -
-\frac{\partial}{\partial \mathbf{n}} F_d
-\right)
-\end{align}
-
-
-
-
-
-### $\frac{\partial}{\partial \mathbf{n}} ss$
-\begin{align}
-\frac{\partial}{\partial \mathbf{n}} ss &=
- \frac{\partial}{\partial \mathbf{n}} \left[
- 1.25\left(F_{ss} \left(\frac{1}{\max(10^{-6}, \mathbf{n}\cdot \mathbf{L}) +
-\max(10^{-6}, \mathbf{n}\cdot \mathbf{V})} - 0.5\right) + 0.5\right)\right]\\
-&=
-1.25 \cdot \frac{\partial}{\partial \mathbf{n}} \left[
-F_{ss} \left(\frac{1}{\max(10^{-6}, \mathbf{n}\cdot \mathbf{L}) +
-\max(10^{-6}, \mathbf{n}\cdot \mathbf{V})} - 0.5\right)\right]\\
-&=
-1.25 \cdot \left(\frac{1}{\max(10^{-6}, \mathbf{n}\cdot \mathbf{L}) +
-\max(10^{-6}, \mathbf{n}\cdot \mathbf{V})} - 0.5\right)
-\cdot \frac{\partial}{\partial \mathbf{n}} F_{ss} +
-F_{ss} \cdot \frac{\partial}{\partial \mathbf{n}} \left(
-\frac{1}{\max(10^{-6}, \mathbf{n}\cdot \mathbf{L}) +
-\max(10^{-6}, \mathbf{n}\cdot \mathbf{V})}\right)
-\end{align}
-
-!!! Warn
-    Use softmax instead to get continuous derivative $\text{softmax}(x) = \frac{x+\sqrt{x^2+\epsilon^2}}{2}$
-
-
-### $\frac{\partial}{\partial \mathbf{n}} F_{ss}$
-\begin{align}
-\frac{\partial}{\partial \mathbf{n}} F_{ss}  &=
-\frac{\partial}{\partial \mathbf{n}}
-\text{mix}(1, F_{ss90}, F_L) \cdot \text{mix}(1, F_{ss90}, F_V)\\
-&=
-\frac{\partial}{\partial \mathbf{n}}
-\left[
- \left(
-1 + F_L(F_{ss90} - 1)
-\right)
-\cdot \left(
-1 + F_V(F_{ss90} - 1)
-\right)
-\right]\\
- &=
-\left(
-1 + F_V(F_{ss90} - 1)
-\right)
-\cdot
-\frac{\partial}{\partial \mathbf{n}}
- \left(
-1 + F_L(F_{ss90} - 1)
-\right)
-+
- \left(
-1 + F_L(F_{ss90} - 1)
-\right) \cdot
-\frac{\partial}{\partial \mathbf{n}}
-\left(
-1 + F_V(F_{ss90} - 1)
-\right)\\
- &=
-\left(
-1 + F_V(F_{ss90} - 1)
-\right)
-\cdot
-(F_{ss90} - 1)\cdot\frac{\partial}{\partial \mathbf{n}} F_L
-+
- \left(
-1 + F_L(F_{ss90} - 1)
-\right) \cdot
-(F_{ss90} - 1)\cdot\frac{\partial}{\partial \mathbf{n}} F_V\\
- &=
-(F_{ss90} - 1)\cdot\left[
-\left(
-1 + F_V(F_{ss90} - 1)
-\right)
-\cdot
-\frac{\partial}{\partial \mathbf{n}} F_L
-+
- \left(
-1 + F_L(F_{ss90} - 1)
-\right) \cdot
-\frac{\partial}{\partial \mathbf{n}} F_V
-\right]
-\end{align}
-
-
-### $\frac{\partial}{\partial \mathbf{n}} F_L$
-\begin{align}
-\frac{\partial}{\partial \mathbf{n}} F_L &=
-\frac{\partial}{\partial \mathbf{n}} \text{schlick}(\max(0,\mathbf{n} \cdot
-\mathbf{L})) \\
-&=
-\frac{\partial}{\partial \mathbf{n}} \text{clamp}(
-1 - (\max(0, \mathbf{n} \cdot \mathbf{L})), 0, 1)^{5} \\
-&=
-\begin{cases}
-\frac{\partial}{\partial \mathbf{n}} (1 - (\mathbf{n} \cdot \mathbf{L}))^{5} & \text{if} & 0 < (\mathbf{n} \cdot \mathbf{L}) < 1\\
-0 & \text{else}
-\end{cases}\\
-&=
-\begin{cases}
-- 5 \cdot (1 - (\mathbf{n} \cdot \mathbf{L}))^{4} \cdot
-\frac{\partial}{\partial \mathbf{n}} (\mathbf{n} \cdot \mathbf{L})
-  & \text{if} & 0 < (\mathbf{n} \cdot \mathbf{L}) < 1\\
-  0  & \text{else}\\
-\end{cases}\\
-\end{align}
-
-
-
-
-### $\frac{\partial}{\partial \mathbf{n}} F_V$
-\begin{align}
-\frac{\partial}{\partial \mathbf{n}} F_V &=
-\frac{\partial}{\partial \mathbf{n}} \text{schlick}(\max(0,\mathbf{n} \cdot
-\mathbf{V})) \\
-&=
-\frac{\partial}{\partial \mathbf{n}} \text{clamp}(
-1 - (\max(0, \mathbf{n} \cdot \mathbf{V})), 0, 1)^{5} \\
-&=
-\begin{cases}
-\frac{\partial}{\partial \mathbf{n}} (1 - (\mathbf{n} \cdot \mathbf{V}))^{5} & \text{if} & 0 < (\mathbf{n} \cdot \mathbf{V}) < 1\\
-0 & \text{else}
-\end{cases}\\
-&=
-\begin{cases}
-- 5 \cdot (1 - (\mathbf{n} \cdot \mathbf{V}))^{4} \cdot
-\frac{\partial}{\partial \mathbf{n}} (\mathbf{n} \cdot \mathbf{V})
-  & \text{if} & 0 < (\mathbf{n} \cdot \mathbf{V}) < 1\\
-  0  & \text{else}\\
-\end{cases}\\
-\end{align}
-
-
-
-### $\frac{\partial}{\partial \mathbf{n}} \left(\frac{1}{\max(10^{-6}, \mathbf{n}\cdot \mathbf{L}) + \max(10^{-6}, \mathbf{n}\cdot \mathbf{V})}\right)$
-\begin{align}
-\frac{\partial}{\partial \mathbf{n}} \left(\frac{1}{
-\max(10^{-6}, \mathbf{n}\cdot \mathbf{L}) +
-\max(10^{-6}, \mathbf{n}\cdot \mathbf{V})}\right) &=
-\frac{-\frac{\partial}{\partial \mathbf{n}} \left(\max(10^{-6},
-\mathbf{n}\cdot\mathbf{L})\right) -
-\frac{\partial}{\partial \mathbf{n}}\left(\max(10^{-6},
-\mathbf{n}\cdot\mathbf{V})\right)}
-{\left(\max(10^{-6}, \mathbf{n}\cdot \mathbf{L}) +
-\max(10^{-6}, \mathbf{n}\cdot \mathbf{V})\right)^{2}}
-\end{align}
-
-
-### $\frac{\partial}{\partial \mathbf{n}} \max(10^{-6}, \mathbf{n}\cdot\mathbf{L})$
-\begin{align}
-\frac{\partial}{\partial \mathbf{n}} \max(10^{-6}, \mathbf{n}\cdot\mathbf{L}) &=
-\begin{cases}
-\mathbf{L} & \text{if} & \mathbf{n}\cdot\mathbf{L} >= 10^{-6}\\
-0 &\text{else}
-\end{cases}
-\end{align}
-
-
-### $\frac{\partial}{\partial \mathbf{n}} \max(10^{-6}, \mathbf{n}\cdot\mathbf{V})$
-\begin{align}
-\frac{\partial}{\partial \mathbf{n}} \max(10^{-6}, \mathbf{n}\cdot\mathbf{V}) &=
-\begin{cases}
-\mathbf{V} & \text{if} & \mathbf{n}\cdot\mathbf{V} >= 10^{-6}\\
-0 &\text{else}
-\end{cases}
+\text{mix}(F_d, ss, P_{ss}) &= F_d + P_{ss}(ss - F_d) \\
+\nabla_{\mathbf{n}} \text{mix}(F_d, ss, P_{ss}) &= (1 - P_{ss}) \cdot \nabla_{\mathbf{n}} F_d + P_{ss} \cdot \nabla_{\mathbf{n}} ss
 \end{align}
 
 
 ### $\frac{\partial}{\partial \mathbf{n}} F_d$
-\begin{align}\frac{\partial}{\partial \mathbf{n}} F_d &=
-\frac{\partial}{\partial \mathbf{n}}\text{mix}(1, F_{d90}, F_L) \cdot \text{mix}(1, F_{d90}, F_V)\\
-&=
-\frac{\partial}{\partial \mathbf{n}}\left[
-\left(1 + F_L (F_{d90} - 1)\right) \cdot
-\left(1 + F_V (F_{d90} - 1)\right)
-\right]\\
-&=
-\left(1 + F_L (F_{d90} - 1)\right) \cdot
-\frac{\partial}{\partial \mathbf{n}}\left[
-\left(1 + F_V (F_{d90} - 1)\right)
-\right] +
-\left(1 + F_V (F_{d90} - 1)\right) \cdot
-\frac{\partial}{\partial \mathbf{n}}\left[
-\left(1 + F_L (F_{d90} - 1)\right)
-\right]\\
-&=
-\left(1 + F_L (F_{d90} - 1)\right) \cdot
-(F_{d90} - 1)\cdot \frac{\partial}{\partial \mathbf{n}}\left[ F_V \right] +
-\left(1 + F_V (F_{d90} - 1)\right) \cdot
-(F_{d90} - 1)\cdot \frac{\partial}{\partial \mathbf{n}}\left[ F_L  \right]
+
+\begin{align}
+F_d &= \text{mix}(1, F_{d90}, F_L) \cdot \text{mix}(1, F_{d90}, F_V) \\
+&= [1 + F_L(F_{d90} - 1)] \cdot [1 + F_V(F_{d90} - 1)] \\
+\nabla_{\mathbf{n}} F_d &= [1 + F_V(F_{d90} - 1)] \cdot (F_{d90} - 1) \cdot \nabla_{\mathbf{n}} F_L \\
+&\quad + [1 + F_L(F_{d90} - 1)] \cdot (F_{d90} - 1) \cdot \nabla_{\mathbf{n}} F_V
+\end{align}
+
+### $\nabla_{\mathbf{n}} ss$
+
+We again use substitution of the denominator to simplify the derivative:
+\begin{align}
+ss &= 1.25 \left[ F_{ss} \cdot \left( \frac{1}{D_{\text{sum}}} - 0.5 \right) + 0.5 \right] \\
+D_{\text{sum}} &= \max(10^{-6}, \mathbf{n} \cdot \mathbf{L}) + \max(10^{-6}, \mathbf{n} \cdot \mathbf{V}) \\
+\nabla_{\mathbf{n}} ss &= 1.25 \left[ \left( \frac{1}{D_{\text{sum}}} - 0.5 \right) \cdot \nabla_{\mathbf{n}} F_{ss} + F_{ss} \cdot \nabla_{\mathbf{n}} \left( \frac{1}{D_{\text{sum}}} \right) \right]
+\end{align}
+
+### $\nabla_{\mathbf{n}} F_{ss}$
+\begin{align}
+F_{ss} &= \text{mix}(1, F_{ss90}, F_L) \cdot \text{mix}(1, F_{ss90}, F_V) \\
+&= [1 + F_L(F_{ss90} - 1)] \cdot [1 + F_V(F_{ss90} - 1)] \\
+\nabla_{\mathbf{n}} F_{ss} &= [1 + F_V(F_{ss90} - 1)] \cdot (F_{ss90} - 1) \cdot \nabla_{\mathbf{n}} F_L \\
+&\quad + [1 + F_L(F_{ss90} - 1)] \cdot (F_{ss90} - 1) \cdot \nabla_{\mathbf{n}} F_V
+\end{align}
+
+### $\nabla_{\mathbf{n}} \left( \frac{1}{D_{\text{sum}}} \right)$
+
+\begin{align}
+\nabla_{\mathbf{n}} \left( \frac{1}{D_{\text{sum}}} \right) &= -\frac{1}{D_{\text{sum}}^{2}} \cdot \nabla_{\mathbf{n}} D_{\text{sum}} \\
+\nabla_{\mathbf{n}} D_{\text{sum}} &= \nabla_{\mathbf{n}} \max(10^{-6}, \mathbf{n} \cdot \mathbf{L}) + \nabla_{\mathbf{n}} \max(10^{-6}, \mathbf{n} \cdot \mathbf{V})
+\end{align}
+
+### $\nabla_{\mathbf{n}} \max(10^{-6}, \mathbf{n} \cdot \mathbf{LV})$:
+Here $\mathbf{LV}$ represents either $\mathbf{L}$ or $\mathbf{V}$.
+\begin{align}
+\nabla_{\mathbf{n}} \max(10^{-6}, \mathbf{n} \cdot \mathbf{LV}) =
+\begin{cases}
+\mathbf{LV} & \text{if } \mathbf{n} \cdot \mathbf{LV} > 10^{-6} \\
+\mathbf{0} & \text{else}
+\end{cases}
+\end{align}
+
+### $\nabla_{\mathbf{n}} F_L$ and $\nabla_{\mathbf{n}} F_V$
+
+\begin{align}
+F_L &= \text{schlick}(\max(0, \mathbf{n} \cdot \mathbf{L})) \\
+F_V &= \text{schlick}(\max(0, \mathbf{n} \cdot \mathbf{V}))
+\end{align}
+
+For $\mathbf{n} \cdot \mathbf{LV} > 0$:
+\begin{align}
+\nabla_{\mathbf{n}} F_L &= -5(1 - \mathbf{n} \cdot \mathbf{L})^{4} \cdot \mathbf{L}^{T} \\
+\nabla_{\mathbf{n}} F_V &= -5(1 - \mathbf{n} \cdot \mathbf{V})^{4} \cdot \mathbf{V}^{T}
+\end{align}
+
+Otherwise: $\nabla_{\mathbf{n}} F_L = \mathbf{0}$, $\nabla_{\mathbf{n}} F_V = \mathbf{0}$
+
+
+### $\nabla_{\mathbf{n}} G_s$
+We again use some substitutions to simplify the derivative and notation using $G_1$ and $G_2$.
+\begin{align}
+G_s &= G_1 \cdot G_2 \\
+G_1 &= \text{smithG}(\mathbf{n} \cdot \mathbf{L}, \mathbf{L} \cdot \mathbf{X}, \mathbf{L} \cdot \mathbf{Y}, a_x, a_y) \\
+G_2 &= \text{smithG}(\mathbf{n} \cdot \mathbf{V}, \mathbf{V} \cdot \mathbf{X}, \mathbf{V} \cdot \mathbf{Y}, a_x, a_y) \\
+\nabla_{\mathbf{n}} G_s &= G_2 \cdot \nabla_{\mathbf{n}} G_1 + G_1 \cdot \nabla_{\mathbf{n}} G_2
+\end{align}
+
+### $\nabla_{\mathbf{n}} G_1$ (for $\mathbf{n} \cdot \mathbf{L} \geq 0$)
+To simplify the derivative we substitute the square root with $S_1$, like we did it before already ($P_ani$).
+\begin{align}
+G_1 &= \frac{1}{\mathbf{n} \cdot \mathbf{L} + S_1} \\
+S_1 &= \sqrt{(\mathbf{L} \cdot \mathbf{X} \cdot a_x)^{2} + (\mathbf{L} \cdot \mathbf{Y} \cdot a_y)^{2} + (\mathbf{n} \cdot \mathbf{L})^{2}} \\
+\nabla_{\mathbf{n}} G_1 &= \nabla_{\mathbf{n}} \left( \frac{1}{\mathbf{n} \cdot \mathbf{L} + S_1} \right) \\
+&= -\frac{1}{(\mathbf{n} \cdot \mathbf{L} + S_1)^{2}} \cdot \nabla_{\mathbf{n}} (\mathbf{n} \cdot \mathbf{L} + S_1) \\
+&= -G_1^{2} \cdot \left( \nabla_{\mathbf{n}} (\mathbf{n} \cdot \mathbf{L}) + \nabla_{\mathbf{n}} S_1 \right)\\
+&= -G_1^{2} \cdot \left( \mathbf{L}^{T} + \frac{(\mathbf{n} \cdot \mathbf{L})}{S_1} \cdot \mathbf{L}^{T} \right) \\
+&= -G_1^{2} \cdot \mathbf{L}^{T} \cdot \left( 1 + \frac{\mathbf{n} \cdot \mathbf{L}}{S_1} \right)
+\end{align}
+
+Using:
+\begin{align}
+\nabla_{\mathbf{n}} (\mathbf{n} \cdot \mathbf{L}) &= \mathbf{L}^{T}
+\end{align}
+And:
+\begin{align}
+\nabla_{\mathbf{n}} S_1 &= \frac{1}{2S_1} \cdot \nabla_{\mathbf{n}} \left[ (\mathbf{L} \cdot \mathbf{X} \cdot a_x)^{2} + (\mathbf{L} \cdot \mathbf{Y} \cdot a_y)^{2} + (\mathbf{n} \cdot \mathbf{L})^{2} \right] \\
+&= \frac{1}{2S_1} \cdot \left[ 0 + 0 + 2(\mathbf{n} \cdot \mathbf{L}) \cdot \nabla_{\mathbf{n}} (\mathbf{n} \cdot \mathbf{L}) \right] \\
+&= \frac{1}{2S_1} \cdot 2(\mathbf{n} \cdot \mathbf{L}) \cdot \mathbf{L}^{T} \\
+&= \frac{(\mathbf{n} \cdot \mathbf{L})}{S_1} \cdot \mathbf{L}^{T}
+\end{align}
+
+Similarly for $\nabla_{\mathbf{n}} G_{2}$ (replace $\mathbf{L}$ with $\mathbf{V}$).
+
+### $\nabla_{\mathbf{n}} D_s$
+We again use substitution here to simplify:
+\begin{align}
+D_s &= \frac{1}{\pi a_x a_y E^{2}} \\
+E &= \left(\frac{\mathbf{H} \cdot \mathbf{X}}{a_x}\right)^{2} + \left(\frac{\mathbf{H} \cdot \mathbf{Y}}{a_y}\right)^{2} + (\mathbf{n} \cdot \mathbf{H})^{2} \\
+\nabla_{\mathbf{n}} D_s &= -\frac{2D_s}{E} \cdot \nabla_{\mathbf{n}} E \\
+\nabla_{\mathbf{n}} E &= 2(\mathbf{n} \cdot \mathbf{H}) \cdot \mathbf{H}^{T} \\
+\Rightarrow \nabla_{\mathbf{n}} D_s &= -\frac{4D_s}{E} \cdot (\mathbf{n} \cdot \mathbf{H}) \cdot \mathbf{H}^{T}
+\end{align}
+
+### $\nabla_{\mathbf{n}} G_r$
+Again we use substitutions like we did for $G_s$:
+\begin{align}
+G_r &= G_{r1} \cdot G_{r2} \\
+G_{r1} &= \text{smithGTR}(\mathbf{n} \cdot \mathbf{L}) \\
+G_{r2} &= \text{smithGTR}(\mathbf{n} \cdot \mathbf{V}) \\
+\nabla_{\mathbf{n}} G_r &= G_{r2} \cdot \nabla_{\mathbf{n}} G_{r1} + G_{r1} \cdot \nabla_{\mathbf{n}} G_{r2}
+\end{align}
+$\nabla_{\mathbf{n}} G_{r1}$ (for $\mathbf{n} \cdot \mathbf{L} \geq 0$)
+
+\begin{align}
+G_{r1} &= \frac{1}{\mathbf{n} \cdot \mathbf{L} + T_1} \\
+T_1 &= \sqrt{0.25^{2} + (\mathbf{n} \cdot \mathbf{L})^{2} - 0.25^{2} \cdot (\mathbf{n} \cdot \mathbf{L})^{2}} \\
+\nabla_{\mathbf{n}} G_{r1} &= \nabla_{\mathbf{n}} \left( \frac{1}{\mathbf{n} \cdot \mathbf{L} + T_1} \right) \\
+&= -\frac{1}{(\mathbf{n} \cdot \mathbf{L} + T_1)^{2}} \cdot \nabla_{\mathbf{n}} (\mathbf{n} \cdot \mathbf{L} + T_1) \\
+&= -G_{r1}^{2} \cdot \left( \nabla_{\mathbf{n}} (\mathbf{n} \cdot \mathbf{L}) + \nabla_{\mathbf{n}} T_1 \right)\\
+\nabla_{\mathbf{n}} G_{r1} &= -G_{r1}^{2} \cdot \left( \mathbf{L}^{T} + \frac{(\mathbf{n} \cdot \mathbf{L})(1 - 0.25^{2})}{T_1} \cdot \mathbf{L}^{T} \right) \\
+&= -G_{r1}^{2} \cdot \mathbf{L}^{T} \cdot \left( 1 + \frac{(\mathbf{n} \cdot \mathbf{L})(1 - 0.25^{2})}{T_1} \right)
+\end{align}
+
+Using:
+\begin{align}
+\nabla_{\mathbf{n}} (\mathbf{n} \cdot \mathbf{L}) &= \mathbf{L}^{T}
+\end{align}
+And:
+\begin{align}
+\nabla_{\mathbf{n}} T_1 &= \frac{1}{2T_1} \cdot \nabla_{\mathbf{n}} \left[ 0.25^{2} + (1 - 0.25^{2})(\mathbf{n} \cdot \mathbf{L})^{2} \right] \\
+&= \frac{1}{2T_1} \cdot \left[ 0 + (1 - 0.25^{2}) \cdot 2(\mathbf{n} \cdot \mathbf{L}) \cdot \nabla_{\mathbf{n}} (\mathbf{n} \cdot \mathbf{L}) \right] \\
+&= \frac{1}{2T_1} \cdot (1 - 0.25^{2}) \cdot 2(\mathbf{n} \cdot \mathbf{L}) \cdot \mathbf{L}^{T} \\
+&= \frac{(1 - 0.25^{2})(\mathbf{n} \cdot \mathbf{L})}{T_1} \cdot \mathbf{L}^{T}
 \end{align}
 
 
+Similarly for $\nabla_{\mathbf{n}} G_{r2}$ (replace $\mathbf{L}$ with $\mathbf{V}$).
 
-
-
-### $\frac{\partial}{\partial \mathbf{n}} G_s$
+### $\nabla_{\mathbf{n}} D_r$
 \begin{align}
-\frac{\partial}{\partial \mathbf{n}} G_s &=
- \frac{\partial}{\partial \mathbf{n}} \left[
-\text{smithG}(\mathbf{n} \cdot \mathbf{L}, \mathbf{L} \cdot \mathbf{X},
-\mathbf{L} \cdot \mathbf{Y}, a_x, a_y)
-\cdot \text{smithG}(\mathbf{n} \cdot \mathbf{V}, \mathbf{V} \cdot \mathbf{X},
-\mathbf{V} \cdot \mathbf{Y}, a_x, a_y)
-\right]\\
-&=
-\text{smithG}(\mathbf{n} \cdot \mathbf{L}, \mathbf{L} \cdot \mathbf{X},
-\mathbf{L} \cdot \mathbf{Y}, a_x, a_y)\cdot
- \frac{\partial}{\partial \mathbf{n}} \left[
-\text{smithG}(\mathbf{n} \cdot \mathbf{V}, \mathbf{V} \cdot \mathbf{X},
-\mathbf{V} \cdot \mathbf{Y}, a_x, a_y)
-\right] \\
-&\quad +
-\text{smithG}(\mathbf{n} \cdot \mathbf{V}, \mathbf{V} \cdot \mathbf{X},
-\mathbf{V} \cdot \mathbf{Y}, a_x, a_y) \cdot
- \frac{\partial}{\partial \mathbf{n}} \left[
-\text{smithG}(\mathbf{n} \cdot \mathbf{L}, \mathbf{L} \cdot \mathbf{X},
-\mathbf{L} \cdot \mathbf{Y}, a_x, a_y)
-\right]
+D_r &= \frac{a_2 - 1}{\pi \log(a_2) \cdot M} \\
+M &= 1 + (a_2 - 1)(\mathbf{n} \cdot \mathbf{H})^{2} \\
+\nabla_{\mathbf{n}} D_r &= \nabla_{\mathbf{n}} \left( \frac{a_2 - 1}{\pi \log(a_2) \cdot M} \right) \\
+&= \frac{a_2 - 1}{\pi \log(a_2)} \cdot \nabla_{\mathbf{n}} \left( \frac{1}{M} \right)\\
 \end{align}
 
-
-
-
-
-### $\frac{\partial}{\partial \mathbf{n}} \left[ \text{smithG}(\mathbf{n} \cdot \mathbf{V}, \mathbf{V} \cdot \mathbf{X}, \mathbf{V} \cdot \mathbf{Y}, a_x, a_y) \right]$
-
-If $\mathbf{n}\cdot\mathbf{V} \geq 0$:
+Using the chain rule on $\frac{1}{M}$ we get:
 \begin{align}
-\frac{\partial}{\partial \mathbf{n}} \text{smithG}(\mathbf{n} \cdot \mathbf{V}, \mathbf{V} \cdot \mathbf{X},\mathbf{V} \cdot \mathbf{Y}, a_x, a_y)
-&=
-\frac{\partial}{\partial \mathbf{n}}
-\frac{1}{\mathbf{n}\cdot\mathbf{V} + \sqrt{(\mathbf{V}\cdot\mathbf{X}\cdot a_x)^{2} +
-(\mathbf{V}\cdot\mathbf{Y}\cdot a_y)^{2}
-+ (\mathbf{n}\cdot{\mathbf{V}})^{2}}}\\
-&=
-\frac{-\frac{\partial}{\partial \mathbf{n}}\left[
-\mathbf{n}\cdot\mathbf{V} + \sqrt{(\mathbf{V}\cdot\mathbf{X}\cdot a_x)^{2} +
-(\mathbf{V}\cdot\mathbf{Y}\cdot a_y)^{2}
-+ (\mathbf{n}\cdot{\mathbf{V}})^{2}}
-\right]}
-{\left(\mathbf{n}\cdot\mathbf{V} + \sqrt{(\mathbf{V}\cdot\mathbf{X}\cdot a_x)^{2} +
-(\mathbf{V}\cdot\mathbf{Y}\cdot a_y)^{2}
-+ (\mathbf{n}\cdot{\mathbf{V}})^{2}}\right)^{2}}\\
-&=
-\frac{
--\frac{\partial}{\partial \mathbf{n}}
-(\mathbf{n}\cdot\mathbf{V})
--\frac{\partial}{\partial \mathbf{n}}
-\sqrt{(\mathbf{V}\cdot\mathbf{X}\cdot a_x)^{2} +
-(\mathbf{V}\cdot\mathbf{Y}\cdot a_y)^{2}
-+ (\mathbf{n}\cdot{\mathbf{V}})^{2}} }
-{\left(\mathbf{n}\cdot\mathbf{V} + \sqrt{(\mathbf{V}\cdot\mathbf{X}\cdot a_x)^{2} +
-(\mathbf{V}\cdot\mathbf{Y}\cdot a_y)^{2}
-+ (\mathbf{n}\cdot{\mathbf{V}})^{2}}\right)^{2}}\\
-&=
-\frac{
-\mathbf{V}
--\frac{\frac{\partial}{\partial \mathbf{n}} (\mathbf{n}\cdot \mathbf{V})^{2}}
-{2\cdot \sqrt{(\mathbf{V}\cdot\mathbf{X}\cdot a_x)^{2} +
-(\mathbf{V}\cdot\mathbf{Y}\cdot a_y)^{2}
-+ (\mathbf{n}\cdot{\mathbf{V}})^{2}}
-}
-}
-{\left(\mathbf{n}\cdot\mathbf{V} + \sqrt{(\mathbf{V}\cdot\mathbf{X}\cdot a_x)^{2} +
-(\mathbf{V}\cdot\mathbf{Y}\cdot a_y)^{2}
-+ (\mathbf{n}\cdot{\mathbf{V}})^{2}}\right)^{2}}\\
-&=
-\frac{
-\mathbf{V}
--\frac{2\cdot (\mathbf{n}\cdot \mathbf{V})\cdot\mathbf{V}}
-{2\cdot \sqrt{(\mathbf{V}\cdot\mathbf{X}\cdot a_x)^{2} +
-(\mathbf{V}\cdot\mathbf{Y}\cdot a_y)^{2}
-+ (\mathbf{n}\cdot{\mathbf{V}})^{2}}
-}
-}
-{\left(\mathbf{n}\cdot\mathbf{V} + \sqrt{(\mathbf{V}\cdot\mathbf{X}\cdot a_x)^{2} +
-(\mathbf{V}\cdot\mathbf{Y}\cdot a_y)^{2}
-+ (\mathbf{n}\cdot{\mathbf{V}})^{2}}\right)^{2}}\\
+\nabla_{\mathbf{n}} \left( \frac{1}{M} \right) &= -\frac{1}{M^{2}} \cdot \nabla_{\mathbf{n}} M
 \end{align}
 
-Otherwise:
+So:
 \begin{align}
-\frac{\partial}{\partial \mathbf{n}} \text{smithG}(\mathbf{n} \cdot \mathbf{V}, \mathbf{V} \cdot \mathbf{X},\mathbf{V} \cdot \mathbf{Y}, a_x, a_y)
-&= 0
-\end{align}
-
-
-### $\frac{\partial}{\partial \mathbf{n}} \left[ \text{smithG}(\mathbf{n} \cdot \mathbf{L}, \mathbf{L} \cdot \mathbf{X}, \mathbf{L} \cdot \mathbf{Y}, a_x, a_y) \right]$
-The same as the one above, but all $\mathbf{V}$ are substituted by $\mathbf{L}$.
-
-If $\mathbf{n}\cdot\mathbf{L} \geq 0$:
-\begin{align}
-\frac{\partial}{\partial \mathbf{n}} \text{smithG}(\mathbf{n} \cdot \mathbf{L}, \mathbf{L} \cdot \mathbf{X},\mathbf{L} \cdot \mathbf{Y}, a_x, a_y)
-&=
-\frac{\partial}{\partial \mathbf{n}}
-\frac{1}{\mathbf{n}\cdot\mathbf{L} + \sqrt{(\mathbf{L}\cdot\mathbf{X}\cdot a_x)^{2} +
-(\mathbf{L}\cdot\mathbf{Y}\cdot a_y)^{2}
-+ (\mathbf{n}\cdot{\mathbf{L}})^{2}}}\\
-&=
-\frac{-\frac{\partial}{\partial \mathbf{n}}\left[
-\mathbf{n}\cdot\mathbf{L} + \sqrt{(\mathbf{L}\cdot\mathbf{X}\cdot a_x)^{2} +
-(\mathbf{L}\cdot\mathbf{Y}\cdot a_y)^{2}
-+ (\mathbf{n}\cdot{\mathbf{L}})^{2}}
-\right]}
-{\left(\mathbf{n}\cdot\mathbf{L} + \sqrt{(\mathbf{L}\cdot\mathbf{X}\cdot a_x)^{2} +
-(\mathbf{L}\cdot\mathbf{Y}\cdot a_y)^{2}
-+ (\mathbf{n}\cdot{\mathbf{L}})^{2}}\right)^{2}}\\
-&=
-\frac{
--\frac{\partial}{\partial \mathbf{n}}
-(\mathbf{n}\cdot\mathbf{L})
--\frac{\partial}{\partial \mathbf{n}}
-\sqrt{(\mathbf{L}\cdot\mathbf{X}\cdot a_x)^{2} +
-(\mathbf{L}\cdot\mathbf{Y}\cdot a_y)^{2}
-+ (\mathbf{n}\cdot{\mathbf{L}})^{2}} }
-{\left(\mathbf{n}\cdot\mathbf{L} + \sqrt{(\mathbf{L}\cdot\mathbf{X}\cdot a_x)^{2} +
-(\mathbf{L}\cdot\mathbf{Y}\cdot a_y)^{2}
-+ (\mathbf{n}\cdot{\mathbf{L}})^{2}}\right)^{2}}\\
-&=
-\frac{
-\mathbf{L}
--\frac{\frac{\partial}{\partial \mathbf{n}} (\mathbf{n}\cdot \mathbf{L})^{2}}
-{2\cdot \sqrt{(\mathbf{L}\cdot\mathbf{X}\cdot a_x)^{2} +
-(\mathbf{L}\cdot\mathbf{Y}\cdot a_y)^{2}
-+ (\mathbf{n}\cdot{\mathbf{L}})^{2}}
-}
-}
-{\left(\mathbf{n}\cdot\mathbf{L} + \sqrt{(\mathbf{L}\cdot\mathbf{X}\cdot a_x)^{2} +
-(\mathbf{L}\cdot\mathbf{Y}\cdot a_y)^{2}
-+ (\mathbf{n}\cdot{\mathbf{L}})^{2}}\right)^{2}}\\
-&=
-\frac{
-\mathbf{L}
--\frac{2\cdot (\mathbf{n}\cdot \mathbf{L})\cdot\mathbf{L}}
-{2\cdot \sqrt{(\mathbf{L}\cdot\mathbf{X}\cdot a_x)^{2} +
-(\mathbf{L}\cdot\mathbf{Y}\cdot a_y)^{2}
-+ (\mathbf{n}\cdot{\mathbf{L}})^{2}}
-}
-}
-{\left(\mathbf{n}\cdot\mathbf{L} + \sqrt{(\mathbf{L}\cdot\mathbf{X}\cdot a_x)^{2} +
-(\mathbf{L}\cdot\mathbf{Y}\cdot a_y)^{2}
-+ (\mathbf{n}\cdot{\mathbf{L}})^{2}}\right)^{2}}\\
-\end{align}
-
-Otherwise:
-\begin{align}
-\frac{\partial}{\partial \mathbf{n}} \text{smithG}(\mathbf{n} \cdot \mathbf{L}, \mathbf{L} \cdot \mathbf{X},\mathbf{L} \cdot \mathbf{Y}, a_x, a_y)
-&= 0
-\end{align}
-
-
-
-
-
-### $\frac{\partial}{\partial \mathbf{n}} D_s$
-Let:
-
-\begin{align}
-E &= \left(\frac{\mathbf{H}\cdot
-\mathbf{X}}{a_x}\right)^{2} + \left(\frac{\mathbf{H}\cdot
-\mathbf{Y}}{a_y}\right)^{2} + (\mathbf{n}\cdot \mathbf{H})^{2}
-\end{align}
-
-Then
-\begin{align}
-\frac{\partial}{\partial \mathbf{n}} D_s &=
-\frac{\partial}{\partial \mathbf{n}}
-\frac{1}{\pi \cdot a_x \cdot a_y \cdot E^{2}}\\
-&=
--\frac{2}{\pi \cdot a_x \cdot a_y} \frac{1}{E^{3}} \frac{\partial E}{\partial \mathbf{n}}
-\end{align}
-
-### $\frac{\partial E}{\partial \mathbf{n}}$
-\begin{align}
-\frac{\partial E}{\partial \mathbf{n}} &=
-\frac{\partial}{\partial \mathbf{n}}
-\left(\frac{\mathbf{H}\cdot
-\mathbf{X}}{a_x}\right)^{2} + \left(\frac{\mathbf{H}\cdot
-\mathbf{Y}}{a_y}\right)^{2} + (\mathbf{n}\cdot \mathbf{H})^{2}\\
-&=
-2(\mathbf{H} \cdot \mathbf{n}) \cdot{\mathbf{H}}
-\end{align}
-
-
-### $\frac{\partial}{\partial \mathbf{n}} G_r$
-\begin{align}
-\frac{\partial}{\partial \mathbf{n}} G_r
- &=
-\frac{\partial}{\partial \mathbf{n}}
-\frac{1}{\mathbf{n}\cdot\mathbf{V} + \sqrt{0.25^{2} + (\mathbf{n}\cdot
-\mathbf{V})^{2} - 0.25^{2}\cdot (\mathbf{n}\cdot \mathbf{V})^{2}}}\\
- &=
-\frac{\partial}{\partial \mathbf{n}}
- \text{smithGTR}(\mathbf{n}\cdot \mathbf{L}) \cdot
-      \text{smithGTR}(\mathbf{n}\cdot \mathbf{V}) \\
-&=
-\text{smithGTR}(\mathbf{n}\cdot \mathbf{V}) \cdot
-\frac{\partial}{\partial \mathbf{n}}
-\text{smithGTR}(\mathbf{n}\cdot \mathbf{L}) +
-\text{smithGTR}(\mathbf{n}\cdot \mathbf{L}) \cdot
-\frac{\partial}{\partial \mathbf{n}}
-\text{smithGTR}(\mathbf{n}\cdot \mathbf{V})
-\end{align}
-
-### $\frac{\partial}{\partial \mathbf{n}} \text{smithGTR}(\mathbf{n}\cdot\mathbf{L})$
-If $\mathbf{n}\cdot\mathbf{L} \geq 0$:
-\begin{align}
-\frac{\partial}{\partial \mathbf{n}}\text{smithGTR}(\mathbf{n}\cdot\mathbf{L})
-&=
-\frac{\partial}{\partial \mathbf{n}}
-\frac{1}{\mathbf{n}\cdot\mathbf{L} + \sqrt{0.25^{2} +
-(\mathbf{n}\cdot\mathbf{L})^{2} - 0.25^{2}\cdot
-(\mathbf{n}\cdot\mathbf{L})^{2}}}\\
-&=
-\frac{- \frac{\partial}{\partial \mathbf{n}}
-\mathbf{n}\cdot\mathbf{L} -
-\frac{\partial}{\partial \mathbf{n}}
-\sqrt{0.25^{2} + (\mathbf{n}\cdot\mathbf{L})^{2} - 0.25^{2}\cdot
-(\mathbf{n}\cdot\mathbf{L})^{2}}}
-{\left(\mathbf{n}\cdot\mathbf{L} + \sqrt{0.25^{2} +
-(\mathbf{n}\cdot\mathbf{L})^{2} - 0.25^{2}\cdot
-(\mathbf{n}\cdot\mathbf{L})^{2}}\right)^{2}}\\
-&=
-\frac{- \mathbf{L} -
-\frac{\partial}{\partial \mathbf{n}}
-\sqrt{0.25^{2} + (\mathbf{n}\cdot\mathbf{L})^{2} - 0.25^{2}\cdot
-(\mathbf{n}\cdot\mathbf{L})^{2}}}
-{\left(\mathbf{n}\cdot\mathbf{L} + \sqrt{0.25^{2} + (\mathbf{n}\cdot\mathbf{L})^{2} - 0.25^{2}\cdot
-(\mathbf{n}\cdot\mathbf{L})^{2}}\right)^{2}}\\
-\end{align}
-
-Otherwise
-\begin{align}
-\frac{\partial}{\partial \mathbf{n}}\text{smithGTR}(\mathbf{n}\cdot\mathbf{L})
-&= 0
-\end{align}
-
-
-
-### $\frac{\partial}{\partial \mathbf{n}} \text{smithGTR}(\mathbf{n}\cdot\mathbf{V})$
-If $\mathbf{n}\cdot\mathbf{V} \geq 0$:
-\begin{align}
-\frac{\partial}{\partial \mathbf{n}}\text{smithGTR}(\mathbf{n}\cdot\mathbf{V})
-&=
-\frac{\partial}{\partial \mathbf{n}}
-\frac{1}{\mathbf{n}\cdot\mathbf{V} + \sqrt{0.25^{2} +
-(\mathbf{n}\cdot\mathbf{V})^{2} - 0.25^{2}\cdot
-(\mathbf{n}\cdot\mathbf{V})^{2}}}\\
-&=
-\frac{- \frac{\partial}{\partial \mathbf{n}}
-\mathbf{n}\cdot\mathbf{V} -
-\frac{\partial}{\partial \mathbf{n}}
-\sqrt{0.25^{2} + (\mathbf{n}\cdot\mathbf{V})^{2} - 0.25^{2}\cdot
-(\mathbf{n}\cdot\mathbf{V})^{2}}}
-{\left(\mathbf{n}\cdot\mathbf{V} + \sqrt{0.25^{2} +
-(\mathbf{n}\cdot\mathbf{V})^{2} - 0.25^{2}\cdot
-(\mathbf{n}\cdot\mathbf{V})^{2}}\right)^{2}}\\
-&=
-\frac{- \mathbf{V} -
-\frac{\partial}{\partial \mathbf{n}}
-\sqrt{0.25^{2} + (\mathbf{n}\cdot\mathbf{V})^{2} - 0.25^{2}\cdot
-(\mathbf{n}\cdot\mathbf{V})^{2}}}
-{\left(\mathbf{n}\cdot\mathbf{V} + \sqrt{0.25^{2} + (\mathbf{n}\cdot\mathbf{V})^{2} - 0.25^{2}\cdot
-(\mathbf{n}\cdot\mathbf{V})^{2}}\right)^{2}}\\
-\end{align}
-
-Otherwise:
-\begin{align}
-\frac{\partial}{\partial \mathbf{n}}\text{smithGTR}(\mathbf{n}\cdot\mathbf{V})
-&= 0
-\end{align}
-
-
-
-
-### $\frac{\partial}{\partial \mathbf{n}} \sqrt{0.25^{2} + (\mathbf{n}\cdot\mathbf{L})^{2} - 0.25^{2}\cdot (\mathbf{n}\cdot \mathbf{L})^{2}}$
-\begin{align}
-\frac{\partial}{\partial \mathbf{n}} \sqrt{0.25^{2} +
-(\mathbf{n}\cdot\mathbf{L})^{2} - 0.25^{2}\cdot (\mathbf{n}\cdot
-\mathbf{L})^{2}}
- &=
-\frac{\frac{\partial}{\partial \mathbf{n}} \left[0.25^{2} +
-(\mathbf{n}\cdot\mathbf{L})^{2} - 0.25^{2}\cdot (\mathbf{n}\cdot
-\mathbf{L})^{2}\right]}
-{
-2 \cdot \sqrt{0.25^{2} + (\mathbf{n}\cdot\mathbf{L})^{2} - 0.25^{2}\cdot
-(\mathbf{n}\cdot \mathbf{L})^{2}}
-}\\
- &=
-\frac{\frac{\partial}{\partial \mathbf{n}} (\mathbf{n}\cdot\mathbf{L})^{2} -
- 0.25^{2}\cdot \frac{\partial}{\partial \mathbf{n}} (\mathbf{n}\cdot
-\mathbf{L})^{2}}
-{
-2 \cdot \sqrt{0.25^{2} + (\mathbf{n}\cdot\mathbf{L})^{2} - 0.25^{2}\cdot
-(\mathbf{n}\cdot \mathbf{L})^{2}}
-}\\
-\end{align}
-
-### $\frac{\partial}{\partial \mathbf{n}} (\mathbf{n}\cdot\mathbf{L})^{2}$
-\begin{align}
-\frac{\partial}{\partial \mathbf{n}} (\mathbf{n}\cdot\mathbf{L})^{2} &=
-2\cdot (\mathbf{n}\cdot\mathbf{L}) \cdot \mathbf{L}
-\end{align}
-
-### $\frac{\partial}{\partial \mathbf{n}} \sqrt{0.25^{2} + (\mathbf{n}\cdot\mathbf{V})^{2} - 0.25^{2}\cdot (\mathbf{n}\cdot \mathbf{V})^{2}}$
-\begin{align}
-\frac{\partial}{\partial \mathbf{n}} \sqrt{0.25^{2} +
-(\mathbf{n}\cdot\mathbf{V})^{2} - 0.25^{2}\cdot (\mathbf{n}\cdot
-\mathbf{V})^{2}}
- &=
-\frac{\frac{\partial}{\partial \mathbf{n}} \left[0.25^{2} +
-(\mathbf{n}\cdot\mathbf{V})^{2} - 0.25^{2}\cdot (\mathbf{n}\cdot
-\mathbf{V})^{2}\right]}
-{
-2 \cdot \sqrt{0.25^{2} + (\mathbf{n}\cdot\mathbf{V})^{2} - 0.25^{2}\cdot
-(\mathbf{n}\cdot \mathbf{V})^{2}}
-}\\
- &=
-\frac{\frac{\partial}{\partial \mathbf{n}} (\mathbf{n}\cdot\mathbf{V})^{2} -
- 0.25^{2}\cdot \frac{\partial}{\partial \mathbf{n}} (\mathbf{n}\cdot
-\mathbf{V})^{2}}
-{
-2 \cdot \sqrt{0.25^{2} + (\mathbf{n}\cdot\mathbf{V})^{2} - 0.25^{2}\cdot
-(\mathbf{n}\cdot \mathbf{V})^{2}}
-}\\
-\end{align}
-
-### $\frac{\partial}{\partial \mathbf{n}} (\mathbf{n}\cdot\mathbf{V})^{2}$
-\begin{align}
-\frac{\partial}{\partial \mathbf{n}} (\mathbf{n}\cdot\mathbf{V})^{2} &=
-2\cdot (\mathbf{n}\cdot\mathbf{V}) \cdot \mathbf{V}
-\end{align}
-
-### $\frac{\partial}{\partial \mathbf{n}} D_r$
-Let
-\begin{align}
-E_1 &= 1+(a_2-1)\cdot (\mathbf{n}\cdot\mathbf{H})^{2}
-\end{align}
-Then
-\begin{align}
-\frac{\partial}{\partial \mathbf{n}} D_r
- &=
-\frac{a_2 - 1}{\pi\cdot\log(a_2)}\cdot\frac{\partial E_{1}^{-1}}{\partial \mathbf{n}}\\
-&=
--\frac{a_2 - 1}{\pi\cdot\log(a_2)\cdot E_{1}^{2}}\cdot\frac{\partial E_{1}}{\partial \mathbf{n}}\\
-\end{align}
-
-### $\frac{\partial E_{1}}{\partial \mathbf{n}}$
-\begin{align}
-\frac{\partial E_{1}}{\partial \mathbf{n}} &= \frac{\partial}{\partial \mathbf{n}} 1+(a_2-1)\cdot (\mathbf{n}\cdot\mathbf{H})^{2}\\
-&= 2(a_2-1)(\mathbf{n}\cdot\mathbf{H}) \mathbf{H}
-\end{align}
-
-
-## Partial derivatives of directions
-The directions $\mathbf{n}$, $\mathbf{L}$ and $\mathbf{V}$ are all unit
-vectors (directions) in the local shading frame, which is defined by the tangent $X = (1,
-0, 0)^T$, the bitangent $Y=(0,1,0)^T$ and the surface normal $\mathbf{N} =
-(0,0,1)^T$. They only have two degrees of freedom. We use this to simplify gradient computations:
-
-The BRDF is only well defined if the directions are in the upper hemisphere,
-thus the $z$-component has to be positive. We can remove one degree of freedom describing a direction vector $\mathbf{D}$ as:
-\begin{align}
-\mathbf{D} & = (D_x, D_y, D_z)^T & D_z = \sqrt{1-D_x^{2} - D_y^{2}}\\
-\end{align}
-Now we compute the partial derivatives of BRDF only for the x and y component
-of the direction $\mathbf{D}$ and the full Jacobi matrix follows implicitly:
-
-\begin{align}
-\nabla_{\mathbf{D}} \text{BRDF} &=
-\left(\frac{\partial \text{BRDF}}{\partial D_x}, \frac{\partial\text{BRDF}}{\partial D_y},
-\frac{\partial \text{BRDF}}{\partial D_z}\right)
+\nabla_{\mathbf{n}} D_r &= \frac{a_2 - 1}{\pi \log(a_2)} \cdot \left( -\frac{1}{M^{2}} \cdot \nabla_{\mathbf{n}} M \right) \\
+&= -\frac{a_2 - 1}{\pi \log(a_2) M^{2}} \cdot \nabla_{\mathbf{n}} M
 \end{align}
 
 With
 \begin{align}
-\frac{\partial \mathbf{D}}{\partial D_x} &=
-\frac{1}{2} \left(1 - D_x^{2} - D_y^{2}\right)^{-1/2} \cdot (-2D_x) =
-\left(1, 0, -\frac{D_x}{D_z}\right)^T \\
-\frac{\partial \mathbf{D}}{\partial D_y} &=
-\frac{1}{2} \left(1 - D_x^{2} - D_y^{2}\right)^{-1/2} \cdot (-2D_y) =
-\left(0, 1, -\frac{D_y}{D_z}\right)^T\\
+\nabla_{\mathbf{n}} M &= \nabla_{\mathbf{n}} \left[ 1 + (a_2 - 1)(\mathbf{n} \cdot \mathbf{H})^{2} \right] \\
+&= (a_2 - 1) \cdot \nabla_{\mathbf{n}} \left[ (\mathbf{n} \cdot \mathbf{H})^{2} \right]
 \end{align}
 
-And the chain rule we get
+And on that using the chain rule:
 \begin{align}
-\frac{\partial\text{BRDF}}{\partial D_x} &= \frac{\partial \text{BRDF}}{\partial D_x} + \frac{\partial \text{BRDF}}{\partial D_z} \cdot \frac{\partial D_z}{\partial D_x} \\
-&= \frac{\partial \text{BRDF}}{\partial D_x} - \frac{D_x}{D_z} \frac{\partial \text{BRDF}}{\partial D_z}
+\nabla_{\mathbf{n}} \left[ (\mathbf{n} \cdot \mathbf{H})^{2} \right] &= 2(\mathbf{n} \cdot \mathbf{H}) \cdot \nabla_{\mathbf{n}} (\mathbf{n} \cdot \mathbf{H}) \\
+&= 2(\mathbf{n} \cdot \mathbf{H}) \cdot \mathbf{H}^{T}
 \end{align}
 
-Similarly for $D_y$:
+Therefore going back to $M$:
 \begin{align}
-\frac{\partial\text{BRDF}}{dD_y} &= \frac{\partial \text{BRDF}}{\partial D_y} - \frac{D_y}{D_z} \frac{\partial \text{BRDF}}{\partial D_z}
+\nabla_{\mathbf{n}} M &= (a_2 - 1) \cdot 2(\mathbf{n} \cdot \mathbf{H}) \cdot \mathbf{H}^{T} \\
+&= 2(a_2 - 1)(\mathbf{n} \cdot \mathbf{H}) \cdot \mathbf{H}^{T}
 \end{align}
 
-To find $\frac{\partial \text{BRDF}}{\partial D_z}$ in terms of the computed derivatives, we note that the gradient must be orthogonal to the normal vector of the constraint surface (the unit sphere). The normal vector is $\mathbf{D}$ itself, so:
+We finally get
 \begin{align}
-\nabla_{\mathbf{D}} \text{BRDF} \cdot \mathbf{D} = 0
+\nabla_{\mathbf{n}} D_r &= -\frac{a_2 - 1}{\pi \log(a_2) M^{2}} \cdot 2(a_2 - 1)(\mathbf{n} \cdot \mathbf{H}) \cdot \mathbf{H}^{T} \\
+&= -\frac{2(a_2 - 1)^{2} (\mathbf{n} \cdot \mathbf{H})}{\pi \log(a_2) M^{2}} \cdot \mathbf{H}^{T}
 \end{align}
 
-Expanding this:
+
+To enforce the unit vector constraint, project each row (RGB channel) onto the tangent plane:
+
+For each color channel $c \in {R, G, B}$ with gradient $\mathbf{g}_c$:
 \begin{align}
-\frac{\partial \text{BRDF}}{\partial D_x} D_x + \frac{\partial \text{BRDF}}{\partial D_y} D_y + \frac{\partial \text{BRDF}}{\partial D_z} D_z = 0
+\mathbf{g}_c^{\text{constrained}} = \mathbf{g}_c - (\mathbf{g}_c \cdot \mathbf{n}) \mathbf{n}
 \end{align}
 
-Solving for $\frac{\partial \text{BRDF}}{\partial D_z}$:
-\begin{align}
-\frac{\partial \text{BRDF}}{\partial D_z} D_z &= -\left(\frac{\partial \text{BRDF}}{\partial D_x} D_x + \frac{\partial \text{BRDF}}{\partial D_y} D_y\right) \\
-\frac{\partial \text{BRDF}}{\partial D_z} &= -\frac{D_x}{D_z} \frac{\partial \text{BRDF}}{\partial D_x} - \frac{D_y}{D_z} \frac{\partial \text{BRDF}}{\partial D_y}
-\end{align}
-
-This gives us the expression for the $z$-component of the gradient without explicitly computing it.
-
-Therefore, the full 3D gradient is:
-\begin{align}
-\nabla_{\mathbf{D}} \text{BRDF} = \left(\frac{\partial \text{BRDF}}{\partial D_x}, \frac{\partial \text{BRDF}}{\partial D_y}, -\frac{D_x}{D_z}\frac{\partial \text{BRDF}}{\partial D_x} - \frac{D_y}{D_z}\frac{\partial \text{BRDF}}{\partial D_y}\right)
-\end{align}
-
-We now use this to compute the gradients for $\mathbf{n}$, $\mathbf{L}$ and $\mathbf{V}$.
-
-## $\nabla_{\mathbf{n}} BRDF
+The final constrained Jacobian has rows $\mathbf{g}_R^{\text{constrained}}, \mathbf{g}_G^{\text{constrained}}, \mathbf{g}_B^{\text{constrained}}$.
 
 
 
