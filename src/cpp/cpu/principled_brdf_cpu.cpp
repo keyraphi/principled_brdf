@@ -281,11 +281,11 @@ void principled_brdf_backward_P_sht_cpu_impl(
 }
 
 void principled_brdf_backward_P_c_cpu_impl(const float *__restrict__ omega_i,
-                                            const float *__restrict__ omega_o,
-                                            const float *__restrict__ P_cg,
-                                            const float *__restrict__ n,
-                                            float *__restrict__ result,
-                                            size_t N) {
+                                           const float *__restrict__ omega_o,
+                                           const float *__restrict__ P_cg,
+                                           const float *__restrict__ n,
+                                           float *__restrict__ result,
+                                           size_t N) {
 #pragma omp parallel for
   for (size_t i = 0; i < N; ++i) {
     const Vec3 L(omega_i[i * 3], omega_i[(i * 3) + 1], omega_i[(i * 3) + 2]);
@@ -294,8 +294,8 @@ void principled_brdf_backward_P_c_cpu_impl(const float *__restrict__ omega_i,
 
     Vec3 n_{n[i * 3], n[(i * 3) + 1], n[(i * 3) + 2]};
 
-    const float dBRDF_dP_c = 0.25F * G_r(L, V, n_) *
-                             F_r(L, H) * D_r(H, n_, P_cg[i]);
+    const float dBRDF_dP_c =
+        0.25F * G_r(L, V, n_) * F_r(L, H) * D_r(H, n_, P_cg[i]);
 
     result[i * 3] = dBRDF_dP_c;
     result[(i * 3) + 1] = dBRDF_dP_c;
@@ -303,13 +303,10 @@ void principled_brdf_backward_P_c_cpu_impl(const float *__restrict__ omega_i,
   }
 }
 
-void principled_brdf_backward_P_cg_cpu_impl(const float *__restrict__ omega_i,
-                                            const float *__restrict__ omega_o,
-                                            const float *__restrict__ P_c,
-                                            const float *__restrict__ P_cg,
-                                            const float *__restrict__ n,
-                                            float *__restrict__ result,
-                                            size_t N) {
+void principled_brdf_backward_P_cg_cpu_impl(
+    const float *__restrict__ omega_i, const float *__restrict__ omega_o,
+    const float *__restrict__ P_c, const float *__restrict__ P_cg,
+    const float *__restrict__ n, float *__restrict__ result, size_t N) {
 #pragma omp parallel for
   for (size_t i = 0; i < N; ++i) {
     const Vec3 L(omega_i[i * 3], omega_i[(i * 3) + 1], omega_i[(i * 3) + 2]);
@@ -318,11 +315,53 @@ void principled_brdf_backward_P_cg_cpu_impl(const float *__restrict__ omega_i,
 
     Vec3 n_{n[i * 3], n[(i * 3) + 1], n[(i * 3) + 2]};
 
-    const float dBRDF_dP_cg = 
-      0.25F * P_c[i] * G_r(L, V, n_) * F_r(L, H) * dD_r_dP_cg(H, P_cg[i], n_);
+    const float dBRDF_dP_cg =
+        0.25F * P_c[i] * G_r(L, V, n_) * F_r(L, H) * dD_r_dP_cg(H, P_cg[i], n_);
 
     result[i * 3] = dBRDF_dP_cg;
     result[(i * 3) + 1] = dBRDF_dP_cg;
     result[(i * 3) + 2] = dBRDF_dP_cg;
+  }
+}
+
+void principled_brdf_backward_n_cpu_impl(
+    const float *__restrict__ omega_i, const float *__restrict__ omega_o,
+    const float *__restrict__ P_b, const float *__restrict__ P_m,
+    const float *__restrict__ P_ss, const float *__restrict__ P_s,
+    const float *__restrict__ P_r, const float *__restrict__ P_st,
+    const float *__restrict__ P_ani, const float *__restrict__ P_c,
+    const float *__restrict__ P_cg, const float *__restrict__ n,
+    float *__restrict__ result, size_t N) {
+#pragma omp parallel for
+  for (size_t i = 0; i < N; ++i) {
+    const Vec3 L(omega_i[i * 3], omega_i[(i * 3) + 1], omega_i[(i * 3) + 2]);
+    const Vec3 V(omega_o[i * 3], omega_o[(i * 3) + 1], omega_o[(i * 3) + 2]);
+    const Vec3 H = (V + L).normalize();
+
+    Vec3 n_{n[i * 3], n[(i * 3) + 1], n[(i * 3) + 2]};
+    Vec3 P_b_{P_b[i * 3], P_b[(i * 3) + 1], P_b[(i * 3) + 2]};
+
+    const Mat3x3 nabla_n_BRDF =
+        (1 - P_m[i]) * (M_1_PIf * C_dlin(P_b_).odot(nabla_n_mix(
+                                      L, V, H, P_ss[i], P_r[i], n_))) +
+        F_s(L, H, P_b_, P_m[i], P_st[i], P_s[i])
+            .odot((D_s(H, n_, P_ani[i], P_r[i]) *
+                   nabla_n_G_s(L, V, P_r[i], P_ani[i], n_)) +
+                  G_s(L, V, n_, P_ani[i], P_r[i]) *
+                      nabla_n_D_s(H, P_r[i], P_ani[i], n_)) +
+        0.25F * P_c[i] * F_r(L, H) *
+            Vec3{1.F, 1.F, 1.F}.odot(
+                D_r(H, n_, P_cg[i]) * nabla_n_G_r(L, V, n_) +
+                G_r(L, V, n_) * nabla_n_D_r(H, P_cg[i], n_));
+
+    result[9 * i + 0] = nabla_n_BRDF.m[0];
+    result[9 * i + 1] = nabla_n_BRDF.m[1];
+    result[9 * i + 2] = nabla_n_BRDF.m[2];
+    result[9 * i + 3] = nabla_n_BRDF.m[3];
+    result[9 * i + 4] = nabla_n_BRDF.m[4];
+    result[9 * i + 5] = nabla_n_BRDF.m[5];
+    result[9 * i + 6] = nabla_n_BRDF.m[6];
+    result[9 * i + 7] = nabla_n_BRDF.m[7];
+    result[9 * i + 8] = nabla_n_BRDF.m[8];
   }
 }

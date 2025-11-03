@@ -1,6 +1,7 @@
 #pragma once
 #include <cmath>
 #include <cuda_runtime_api.h>
+#include <thrust/detail/internal_functional.h>
 
 #ifdef __CUDACC__
 #define HOST_DEVICE __host__ __device__
@@ -720,4 +721,108 @@ HOST_DEVICE inline float da_2_dP_cg(const float P_cg) {
 HOST_DEVICE inline float dD_r_dP_cg(const Vec3 &H, const float P_cg,
                                     const Vec3 &n) {
   return dD_r_da_2(H, P_cg, n) * da_2_dP_cg(P_cg);
+}
+
+// nabla_n_BRDF
+// returns a gradient vector (1x3)
+HOST_DEVICE inline Vec3 nabla_n_F_LV(const Vec3 &LV, const Vec3 &n) {
+  const float NLV = n * LV;
+  if (NLV <= 0.F) {
+    return Vec3{0.F, 0.F, 0.F};
+  }
+  const float value = 1.F - NLV;
+  return -5.F * value * value * value * LV;
+}
+// returns a gradient vector (1x3)
+HOST_DEVICE inline Vec3 nabla_n_F_d(const Vec3 &L, const Vec3 &V, const Vec3 &H,
+                                    const float P_r, const Vec3 &n) {
+  return (1.F + F_VL(n, V) * (F_d90(L, H, P_r) - 1.F)) *
+             (F_d90(L, H, P_r) - 1.F) * nabla_n_F_LV(L, n) +
+         (1.F + F_VL(n, L) * (F_d90(L, H, P_r) - 1.F)) *
+             (F_d90(L, H, P_r) - 1.F) * nabla_n_F_LV(V, n);
+}
+// returns a gradient vector (1x3)
+HOST_DEVICE inline Vec3 nabla_n_D_sum_inv(const Vec3 &L, const Vec3 &V,
+                                          const Vec3 &n) {
+  const Vec3 nabla_n_max_L = n * L > 1e-6F ? L : Vec3{0.F, 0.F, 0.F};
+  const Vec3 nabla_n_max_V = n * V > 1e-6F ? V : Vec3{0.F, 0.F, 0.F};
+  return nabla_n_max_L + nabla_n_max_V;
+}
+// returns a gradient vector (1x3)
+HOST_DEVICE inline Vec3 nabla_n_F_ss(const Vec3 &L, const Vec3 &V,
+                                     const Vec3 &H, const float P_r,
+                                     const Vec3 &n) {
+  return (1.F + F_VL(n, V) * (F_ss90(L, H, P_r) - 1.F)) *
+             (F_ss90(L, H, P_r) - 1.F) * nabla_n_F_LV(L, n) +
+         (1.F + F_VL(n, L) * (F_ss90(L, H, P_r) - 1.F)) *
+             (F_ss90(L, H, P_r) - 1.F) * nabla_n_F_LV(V, n);
+}
+// returns a gradient vector (1x3)
+HOST_DEVICE inline Vec3 nabla_n_ss(const Vec3 &L, const Vec3 &V, const Vec3 &H,
+                                   const float P_r, const Vec3 &n) {
+  const float D_sum = fmaxf(1e-6, n * L) + fmaxf(1e-6, n * V);
+  return 1.25F * ((1.F / D_sum - 0.5F) * nabla_n_F_ss(L, V, H, P_r, n) +
+                  F_ss(V, L, H, n, P_r) * nabla_n_D_sum_inv(L, V, n));
+}
+// returns a gradient vector (1x3)
+HOST_DEVICE inline Vec3 nabla_n_mix(const Vec3 &L, const Vec3 &V, const Vec3 &H,
+                                    const float P_ss, const float P_r,
+                                    const Vec3 &n) {
+  return (1.F - P_ss) * nabla_n_F_d(L, V, H, P_r, n) +
+         P_ss * nabla_n_ss(L, V, H, P_r, n);
+}
+// returns a gradient vector (1x3)
+HOST_DEVICE inline Vec3 nabla_n_GX(const Vec3 &LV, const Vec3 &X, const Vec3 &Y,
+                                   const float GX, const float ax,
+                                   const float ay, const Vec3 &n) {
+  const float lvxax = LV * X * ax;
+  const float lvyay = LV * Y * ay;
+  const float nlv = n * LV;
+  const float S1 = sqrtf(lvxax * lvxax + lvyay * lvyay * nlv * nlv);
+  return -GX * GX * LV * (1.F + n * LV / S1);
+}
+// returns a gradient vector (1x3)
+HOST_DEVICE inline Vec3 nabla_n_G_s(const Vec3 &L, const Vec3 &V,
+                                    const float P_r, const float P_ani,
+                                    const Vec3 &n) {
+  const Vec3 X = Vec3{1.F, 0.F, 0.F};
+  const Vec3 Y = Vec3{0.F, 1.F, 0.F};
+  const float ax = a_x(P_ani, P_r);
+  const float ay = a_y(P_ani, P_r);
+  const float G1 = smithG(n * L, L * X, L * Y, ax, ay);
+  const float G2 = smithG(n * V, V * X, V * Y, ax, ay);
+  return G2 * nabla_n_GX(L, X, Y, G1, ax, ay, n) +
+         G1 * nabla_n_GX(V, X, Y, G2, ax, ay, n);
+}
+// returns a gradient vector (1x3)
+HOST_DEVICE inline Vec3 nabla_n_D_s(const Vec3 &H, const float P_r,
+                                    const float P_ani, const Vec3 &n) {
+  const Vec3 X = Vec3{1.F, 0.F, 0.F};
+  const Vec3 Y = Vec3{0.F, 1.F, 0.F};
+  const float ax = a_x(P_ani, P_r);
+  const float ay = a_y(P_ani, P_r);
+  const float hxax = H * X / ax;
+  const float hyay = H * Y / ay;
+  const float nH = n * H;
+  const float E = hxax * hxax + hyay * hyay + nH * nH;
+  return -(4.F * D_s(H, n, P_ani, P_r) / E) * nH * H;
+}
+// returns a gradient vector (1x3)
+HOST_DEVICE inline Vec3 nabla_n_GrX(const Vec3 &LV, const float nLV, const float GrX) {
+  const float T1 = sqrtf(0.25F * 0.25F + nLV * nLV + 0.25F * 0.25F * nLV * nLV);
+  return -GrX * GrX * LV * (1.F + nLV * (1.F - 0.25F * 0.25F) / T1);
+}
+// returns a gradient vector (1x3)
+HOST_DEVICE inline Vec3 nabla_n_G_r(const Vec3 &L, const Vec3 &V,
+                                    const Vec3 &n) {
+  const float Gr1 = smithGTR(n * L);
+  const float Gr2 = smithGTR(n * V);
+  return Gr2 * nabla_n_GrX(L, n * L, Gr1) + Gr1 * nabla_n_GrX(V, n * V, Gr2);
+}
+// returns a gradient vector (1x3)
+HOST_DEVICE inline Vec3 nabla_n_D_r(const Vec3& H, const float P_cg, const Vec3& n){
+  const float a2 = a_2(P_cg);
+  const float nH = n*H;
+  const float M = 1.F + (a2-1.F)*nH*nH;
+  return - (2*(a2-1.F)*(a2-1.F)*nH)/(M_PIf*logf(a2)*M*M) * H;
 }
