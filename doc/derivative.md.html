@@ -522,8 +522,7 @@ P_s\cdot 0.08 \cdot P_{st} \cdot \mathbf{C_{tint}}\right)
 \cdot \mathbf{C_{tint}}\right)\\
 &=
 P_s\cdot 0.08 \cdot P_{st} \cdot \nabla_{\mathbf{P_b}}\mathbf{C_{tint}}
-+ P_m \cdot \nabla_{\mathbf{P_b}} \mathbf{C_{dlin}}
-- P_m\cdot P_s\cdot 0.08 \cdot P_{st}
++ P_m \cdot \nabla_{\mathbf{P_b}} \mathbf{C_{dlin}} - P_m\cdot P_s\cdot 0.08 \cdot P_{st}
 \cdot \nabla_{\mathbf{P_b}} \mathbf{C_{tint}} \\
 &=
 (P_s\cdot 0.08 \cdot P_{st} \cdot \nabla_{\mathbf{P_b}}\mathbf{C_{tint}}) \cdot (1 - P_m)
@@ -1484,9 +1483,7 @@ With
 
 ## $\nabla_{\mathbf{n}}$ BRDF
 
-Gradient of BRDF with Respect to the Normal $\mathbf{n}$
-
-We derive the 3×3 Jacobian matrix $\nabla_{\mathbf{n}} \text{BRDF}$ using the full gradient approach. The BRDF consists of three main terms:
+Gradient of BRDF with Respect to the Normal $\mathbf{n}$ is a 3×3 Jacobian matrix $\nabla_{\mathbf{n}} \text{BRDF}$.
 
 \begin{align}
 \nabla_{\mathbf{n}}\text{BRDF} &=
