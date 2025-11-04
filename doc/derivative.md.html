@@ -1703,14 +1703,582 @@ We finally get
 \end{align}
 
 
-To enforce the unit vector constraint, project each row (RGB channel) onto the tangent plane:
 
-For each color channel $c \in {R, G, B}$ with gradient $\mathbf{g}_c$:
+## $\nabla_{\mathbf{L}}$ BRDF
+
+Gradient of BRDF with Respect to the Light Direction $\mathbf{L}$ is a 3×3 Jacobian matrix $\nabla_{\mathbf{L}} \text{BRDF}$.
+
 \begin{align}
-\mathbf{g}_c^{\text{constrained}} = \mathbf{g}_c - (\mathbf{g}_c \cdot \mathbf{n}) \mathbf{n}
+\nabla_{\mathbf{L}}\text{BRDF} &=
+\nabla_{\mathbf{L}}\left[\left(\frac{1}{\pi} \text{mix}(F_d, ss, P_{ss}) \cdot \mathbf{C_{dlin}} + \mathbf{F_{sheen}}\right) \cdot (1 - P_{m})\right] +  \\
+&\quad \nabla_{\mathbf{L}}\left[ G_s \cdot \mathbf{F_s} \cdot D_s\right] + \\
+&\quad \nabla_{\mathbf{L}} \left[0.25 \cdot P_c \cdot G_r \cdot F_r \cdot D_r\right] \\
+&=
+(1 - P_m) \cdot \left[ \frac{1}{\pi} \cdot \mathbf{C_{dlin}} \otimes \nabla_{\mathbf{L}} \text{mix}(F_d, ss, P_{ss}) + \nabla_{\mathbf{L}} \mathbf{F_{sheen}} \right]  \\
+&\quad + \mathbf{F_s} \otimes \left( D_s \cdot \nabla_{\mathbf{L}} G_s + G_s \cdot \nabla_{\mathbf{L}} D_s \right)  \\
+&\quad + 0.25 \cdot P_c \cdot F_r \cdot \mathbf{1} \otimes \left( D_r \cdot \nabla_{\mathbf{L}} G_r + G_r \cdot \nabla_{\mathbf{L}} D_r \right)
 \end{align}
 
-The final constrained Jacobian has rows $\mathbf{g}_R^{\text{constrained}}, \mathbf{g}_G^{\text{constrained}}, \mathbf{g}_B^{\text{constrained}}$.
+!!! Note
+      The derivatives of scalar terms w.r.t. to the light direction are themselves $1\times 3$ gradient vectors. We explicitly show the outer product as $\otimes$, which yields a $3\times 3$ matrix.
+
+### Fundamental Building Blocks:
+
+The half-vector $\mathbf{H} = \frac{\mathbf{L} + \mathbf{V}}{|\mathbf{L} + \mathbf{V}|}$ depends on $\mathbf{L}$:
+
+\begin{align}
+\mathbf{H} &= \frac{\mathbf{L} + \mathbf{V}}{|\mathbf{L} + \mathbf{V}|} = \frac{\mathbf{S}}{s}  \\
+\text{where } \mathbf{S} &= \mathbf{L} + \mathbf{V}, \quad s = |\mathbf{S}|
+\end{align}
+
+Quotient rule:
+\begin{align}
+\nabla_{\mathbf{L}} \mathbf{H} &= \nabla_{\mathbf{L}} \left( \frac{\mathbf{S}}{s} \right)  \\
+&= \frac{1}{s} \cdot \nabla_{\mathbf{L}} \mathbf{S} - \frac{1}{s^{2}} \cdot \mathbf{S} \otimes \nabla_{\mathbf{L}} s
+\end{align}
+
+With $\nabla_{\mathbf{L}} \mathbf{S}$
+\begin{align}
+\mathbf{S} &= \mathbf{L} + \mathbf{V}  \\
+\nabla_{\mathbf{L}} \mathbf{S} &= \nabla_{\mathbf{L}} (\mathbf{L} + \mathbf{V}) \\
+&= \mathbf{I} \quad \text{(3×3 identity matrix)}
+\end{align}
+
+and $\nabla_{\mathbf{L}} s$
+\begin{align}
+s &= |\mathbf{S}| = \sqrt{\mathbf{S} \cdot \mathbf{S}}  \\
+\nabla_{\mathbf{L}} s &= \nabla_{\mathbf{L}} \sqrt{\mathbf{S} \cdot \mathbf{S}}  \\
+&= \frac{1}{2\sqrt{\mathbf{S} \cdot \mathbf{S}}} \cdot \nabla_{\mathbf{L}} (\mathbf{S} \cdot \mathbf{S})  \\
+&= \frac{1}{2s} \cdot 2\mathbf{S}^T \cdot \nabla_{\mathbf{L}} \mathbf{S} \quad \text{(using chain rule)}  \\
+&= \frac{1}{s} \cdot \mathbf{S}^T \cdot \mathbf{I}  \\
+&= \frac{1}{s} \cdot \mathbf{S}^T\\
+&= \frac{1}{|L+V|} \cdot (\mathbf{L}+\mathbf{V})^T
+\end{align}
+
+Substitute back into quotient rule
+
+\begin{align}
+\nabla_{\mathbf{L}} \mathbf{H} &=
+\frac{1}{s} \cdot \nabla_{\mathbf{L}} \mathbf{S} - \frac{1}{s^{2}} \cdot \mathbf{S} \otimes \nabla_{\mathbf{L}} s\\
+&= \frac{1}{|\mathbf{L}+\mathbf{V}|} \cdot \mathbf{I} - \frac{1}{|\mathbf{L}+\mathbf{V}|^{2}} \cdot (\mathbf{L}+\mathbf{V}) \otimes \frac{1}{|\mathbf{L}+\mathbf{V}|} \cdot (\mathbf{L}+\mathbf{V})^T\\
+&= \frac{1}{|\mathbf{L}+\mathbf{V}|} \cdot \mathbf{I} - \frac{1}{|\mathbf{L}+\mathbf{V}|} \cdot \mathbf{H} \otimes \mathbf{H}^T\\
+&= \frac{1}{|\mathbf{L} + \mathbf{V}|} \left( \mathbf{I} - \mathbf{H}\otimes \mathbf{H}^T \right)
+\end{align}
+
+This 3×3 matrix will appear in many derivatives.
+
+### $\nabla_{\mathbf{L}} \text{mix}(F_d, ss, P_{ss})$
+
+\begin{align}
+\text{mix}(F_d, ss, P_{ss}) &= F_d + P_{ss}(ss - F_d)  \\
+\nabla_{\mathbf{L}} \text{mix}(F_d, ss, P_{ss}) &= (1 - P_{ss}) \cdot \nabla_{\mathbf{L}} F_d + P_{ss} \cdot \nabla_{\mathbf{L}} ss
+\end{align}
+
+### $\nabla_{\mathbf{L}} F_d$
+
+\begin{align}
+F_d &= [1 + F_L(F_{d90} - 1)] \cdot [1 + F_V(F_{d90} - 1)]  \\
+\nabla_{\mathbf{L}} F_d &= [1 + F_V(F_{d90} - 1)] \cdot (F_{d90} - 1) \cdot \nabla_{\mathbf{L}} F_L  \\
+&\quad + [1 + F_L(F_{d90} - 1)] \cdot [1 + F_V(F_{d90} - 1)] \cdot \nabla_{\mathbf{L}} F_{d90}
+\end{align}
+
+### $\nabla_{\mathbf{L}} F_{d90}$
+
+\begin{align}
+F_{d90} &= 0.5 + 2 (\mathbf{L}\cdot\mathbf{H})^{2} \cdot P_r  \\
+\nabla_{\mathbf{L}} F_{d90} &= 4 P_r (\mathbf{L}\cdot\mathbf{H}) \cdot \nabla_{\mathbf{L}} (\mathbf{L}\cdot\mathbf{H}) 
+\nabla_{\mathbf{L}} (\mathbf{L}\cdot\mathbf{H}) &= \mathbf{H}^T + \mathbf{L}^T \cdot \nabla_{\mathbf{L}} \mathbf{H}
+\end{align}
+
+### $\nabla_{\mathbf{L}} (\mathbf{L}\cdot\mathbf{H})$
+\begin{align}
+\nabla_{\mathbf{L}} (\mathbf{L}\cdot\mathbf{H}) &= \mathbf{H}^T + \mathbf{L}^T \cdot \nabla_{\mathbf{L}} \mathbf{H}
+\end{align}
+
+### $\nabla_{\mathbf{L}} F_L$
+
+\begin{align}
+F_L &= \text{schlick}(\max(0, \mathbf{n} \cdot \mathbf{L}))  \\
+\text{schlick}(u) &= \text{clamp}(1 - u, 0, 1)^{5}
+\end{align}
+
+For $\mathbf{n} \cdot \mathbf{L} > 0$:
+\begin{align}
+F_L &= \text{schlick}(\mathbf{n} \cdot \mathbf{L})  \\
+&= [1 - (\mathbf{n} \cdot \mathbf{L})]^{5} \quad \text{(since $0 \leq \mathbf{n} \cdot \mathbf{L} \leq 1$)}
+\end{align}
+
+Then:
+\begin{align}
+\nabla_{\mathbf{L}} F_L &= \nabla_{\mathbf{L}} [1 - (\mathbf{n} \cdot \mathbf{L})]^{5}  \\
+&= 5[1 - (\mathbf{n} \cdot \mathbf{L})]^{4} \cdot \nabla_{\mathbf{L}} [1 - (\mathbf{n} \cdot \mathbf{L})] \\
+&= 5[1 - (\mathbf{n} \cdot \mathbf{L})]^{4} \cdot (-\nabla_{\mathbf{L}} (\mathbf{n} \cdot \mathbf{L})) \\
+&= -5[1 - (\mathbf{n} \cdot \mathbf{L})]^{4} \cdot \nabla_{\mathbf{L}} (\mathbf{n} \cdot \mathbf{L})
+\end{align}
+
+With
+\begin{align}
+\nabla_{\mathbf{L}} (\mathbf{n} \cdot \mathbf{L}) &= \mathbf{n}^T 
+\end{align}
+
+We get
+\begin{align}
+\nabla_{\mathbf{L}} F_L &= -5[1 - (\mathbf{n} \cdot \mathbf{L})]^{4} \cdot \mathbf{n}^T
+\end{align}
+
+
+For $\mathbf{n} \cdot \mathbf{L} \leq 0$:
+\begin{align}
+\max(0, \mathbf{n} \cdot \mathbf{L}) &= 0  \\
+F_L &= \text{schlick}(0) = (1 - 0)^{5} = 1  \\
+\nabla_{\mathbf{L}} F_L &= \mathbf{0} 
+\end{align}
+
+### $\nabla_{\mathbf{L}} ss$
+
+\begin{align}
+ss &= 1.25 \left[ F_{ss} \cdot \left( \frac{1}{D_{\text{sum}}} - 0.5 \right) + 0.5 \right]  \\
+D_{\text{sum}} &= \max(10^{-6}, \mathbf{n} \cdot \mathbf{L}) + \max(10^{-6}, \mathbf{n} \cdot \mathbf{V}) \\
+\nabla_{\mathbf{L}} ss &= 1.25 \left[ \left( \frac{1}{D_{\text{sum}}} - 0.5 \right) \cdot \nabla_{\mathbf{L}} F_{ss} + F_{ss} \cdot \nabla_{\mathbf{L}} \left( \frac{1}{D_{\text{sum}}} \right) \right]
+\end{align}
+
+### $\nabla_{\mathbf{L}} F_{ss}$
+
+\begin{align}
+F_{ss} &= [1 + F_L(F_{ss90} - 1)] \cdot [1 + F_V(F_{ss90} - 1)]  \\
+\nabla_{\mathbf{L}} F_{ss} &= [1 + F_V(F_{ss90} - 1)] \cdot (F_{ss90} - 1) \cdot \nabla_{\mathbf{L}} F_L  \\
+&\quad + [1 + F_L(F_{ss90} - 1)] \cdot [1 + F_V(F_{ss90} - 1)] \cdot \nabla_{\mathbf{L}} F_{ss90}
+\end{align}
+
+### $\nabla_{\mathbf{L}} F_{ss90}$
+
+\begin{align}
+F_{ss90} &= (\mathbf{L}\cdot \mathbf{H})^{2} \cdot P_r  \\
+\nabla_{\mathbf{L}} F_{ss90} &= 2 P_r (\mathbf{L}\cdot \mathbf{H}) \cdot \nabla_{\mathbf{L}} (\mathbf{L}\cdot \mathbf{H})
+\end{align}
+
+### $\nabla_{\mathbf{L}} \left( \frac{1}{D_{\text{sum}}} \right)$
+
+\begin{align}
+\nabla_{\mathbf{L}} \left( \frac{1}{D_{\text{sum}}} \right) &= -\frac{1}{D_{\text{sum}}^{2}} \cdot \nabla_{\mathbf{L}} D_{\text{sum}}  \\
+\nabla_{\mathbf{L}} D_{\text{sum}} &= \nabla_{\mathbf{L}} \max(10^{-6}, \mathbf{n} \cdot \mathbf{L})
+\end{align}
+
+With
+\begin{align}
+\nabla_{\mathbf{L}} \max(10^{-6}, \mathbf{n} \cdot \mathbf{L}) &=
+\begin{cases}
+\mathbf{n}^{T} & \text{if } \mathbf{n} \cdot \mathbf{L} > 10^{-6}  \\
+\mathbf{0} & \text{else}
+\end{cases}
+\end{align}
+
+### $\nabla_{\mathbf{L}} \mathbf{F_{sheen}}$
+
+\begin{align}
+\mathbf{F_{sheen}} &= F_H \cdot P_{sh} \cdot \mathbf{C_{sheen}}  \\
+\nabla_{\mathbf{L}} \mathbf{F_{sheen}} &= P_{sh} \cdot \mathbf{C_{sheen}} \otimes \nabla_{\mathbf{L}} F_H
+\end{align}
+
+### $\nabla_{\mathbf{L}} F_H$
+This uses the same derivation as $\nabla_{\mathbf{L}}F_L$
+\begin{align}
+F_H &= \text{schlick}(\mathbf{L}\cdot \mathbf{H})  \\
+\nabla_{\mathbf{L}} F_H &= -5(1 - \mathbf{L}\cdot \mathbf{H})^{4} \cdot \nabla_{\mathbf{L}} (\mathbf{L}\cdot \mathbf{H})
+\end{align}
+
+### $\nabla_{\mathbf{L}} G_s$
+
+\begin{align}
+G_s &= G_1 \cdot G_2  \\
+G_1 &= \text{smithG}(\mathbf{n} \cdot \mathbf{L}, \mathbf{L} \cdot \mathbf{X}, \mathbf{L} \cdot \mathbf{Y}, a_x, a_y)  \\
+G_2 &= \text{smithG}(\mathbf{n} \cdot \mathbf{V}, \mathbf{V} \cdot \mathbf{X}, \mathbf{V} \cdot \mathbf{Y}, a_x, a_y)  \\
+\nabla_{\mathbf{L}} G_s &= G_2 \cdot \nabla_{\mathbf{L}} G_1
+\end{align}
+
+### $\nabla_{\mathbf{L}} G_1$ (for $\mathbf{n} \cdot \mathbf{L} \geq 0$)
+
+\begin{align}
+G_1 &= \frac{1}{\mathbf{n} \cdot \mathbf{L} + S_1}  \\
+S_1 &= \sqrt{(\mathbf{L} \cdot \mathbf{X} \cdot a_x)^{2} + (\mathbf{L} \cdot \mathbf{Y} \cdot a_y)^{2} + (\mathbf{n} \cdot \mathbf{L})^{2}}  \\
+\nabla_{\mathbf{L}} G_1 &= \nabla_{\mathbf{L}} \left( \frac{1}{\mathbf{n} \cdot \mathbf{L} + S_1} \right)  \\
+&= -\frac{1}{(\mathbf{n} \cdot \mathbf{L} + S_1)^{2}} \cdot \nabla_{\mathbf{L}} (\mathbf{n} \cdot \mathbf{L} + S_1)  \\
+&= -G_1^{2} \cdot \left( \nabla_{\mathbf{L}} (\mathbf{n} \cdot \mathbf{L}) + \nabla_{\mathbf{L}} S_1 \right)  \\
+\end{align}
+With
+\begin{align}
+\nabla_{\mathbf{L}} (\mathbf{n} \cdot \mathbf{L}) &= \mathbf{n}^T 
+\end{align}
+And
+\begin{align}
+\nabla_{\mathbf{L}} S_1 &= \frac{1}{2\cdot S_1} \nabla_{\mathbf{L}} \left[(\mathbf{L} \cdot \mathbf{X} \cdot a_x)^{2} + (\mathbf{L} \cdot \mathbf{Y} \cdot a_y)^{2} + (\mathbf{n} \cdot \mathbf{L})^{2}\right]  \\
+&= \frac{1}{2\cdot S_1} \left[ 2\cdot a_x^{2}\cdot(\mathbf{L} \cdot \mathbf{X}) \cdot \mathbf{X}^T + 2\cdot a_y^{2}\cdot (\mathbf{L} \cdot \mathbf{Y}) \cdot \mathbf{Y}^T + 2\cdot(\mathbf{n} \cdot \mathbf{L}) \cdot \mathbf{n}^T \right]  \\
+&= \frac{1}{ S_1} \left( a_x^{2}\cdot(\mathbf{L} \cdot \mathbf{X}) \cdot \mathbf{X}^T +  a_y^{2}\cdot (\mathbf{L} \cdot \mathbf{Y}) \cdot \mathbf{Y}^T + (\mathbf{n} \cdot \mathbf{L}) \cdot \mathbf{n}^T \right )  \\
+\end{align}
+
+### $\nabla_{\mathbf{L}} D_s$
+
+\begin{align}
+D_s &= \frac{1}{\pi a_x a_y E^{2}}  \\
+E &= \left(\frac{\mathbf{H} \cdot \mathbf{X}}{a_x}\right)^{2} + \left(\frac{\mathbf{H} \cdot \mathbf{Y}}{a_y}\right)^{2} + (\mathbf{n} \cdot \mathbf{H})^{2}  \\
+\nabla_{\mathbf{L}} D_s &= \nabla_{\mathbf{L}} \left( \frac{1}{\pi a_x a_y E^{2}} \right)  \\
+&= \frac{1}{\pi a_x a_y} \cdot \nabla_{\mathbf{L}} \left( E^{-2} \right)  \\
+&= \frac{1}{\pi a_x a_y} \cdot \left( -2E^{-3} \cdot \nabla_{\mathbf{L}} E \right)  \\
+&= -\frac{2}{\pi a_x a_y E^{3}} \cdot \nabla_{\mathbf{L}} E  \\
+&= -\frac{2 D_s}{E} \cdot \nabla_{\mathbf{L}} E  \\
+\end{align}
+
+With
+\begin{align}
+\nabla_{\mathbf{L}} E &= 2 \left[ \frac{\mathbf{H} \cdot \mathbf{X}}{a_x^{2}} \cdot \mathbf{X}^T + \frac{\mathbf{H} \cdot \mathbf{Y}}{a_y^{2}} \cdot \mathbf{Y}^T + (\mathbf{n} \cdot \mathbf{H}) \cdot \mathbf{n}^T \right] \cdot \nabla_{\mathbf{L}} \mathbf{H}  \\
+\Rightarrow \nabla_{\mathbf{L}} D_s &= -\frac{4 D_s}{E} \cdot \left[ \frac{\mathbf{H} \cdot \mathbf{X}}{a_x^{2}} \cdot \mathbf{X}^T + \frac{\mathbf{H} \cdot \mathbf{Y}}{a_y^{2}} \cdot \mathbf{Y}^T + (\mathbf{n} \cdot \mathbf{H}) \cdot \mathbf{n}^T \right] \cdot \nabla_{\mathbf{L}} \mathbf{H}
+\end{align}
+
+### $\nabla_{\mathbf{L}} G_r$
+
+\begin{align}
+G_r &= G_{r1} \cdot G_{r2}  \\
+G_{r1} &= \text{smithGTR}(\mathbf{n} \cdot \mathbf{L})  \\
+G_{r2} &= \text{smithGTR}(\mathbf{n} \cdot \mathbf{V})  \\
+\nabla_{\mathbf{L}} G_r &= G_{r2} \cdot \nabla_{\mathbf{L}} G_{r1}
+\end{align}
+$\nabla_{\mathbf{L}} G_{r1}$ (for $\mathbf{n} \cdot \mathbf{L} \geq 0$)
+
+\begin{align}
+G_{r1} &= \frac{1}{\mathbf{n} \cdot \mathbf{L} + T_1}  \\
+T_1 &= \sqrt{0.25^{2} + (\mathbf{n} \cdot \mathbf{L})^{2} - 0.25^{2} \cdot (\mathbf{n} \cdot \mathbf{L})^{2}}  \\
+\nabla_{\mathbf{L}} G_{r1} &= \nabla_{\mathbf{L}} \left( \frac{1}{\mathbf{n} \cdot \mathbf{L} + T_1} \right)  \\
+&= -\frac{1}{(\mathbf{n} \cdot \mathbf{L} + T_1)^{2}} \cdot \nabla_{\mathbf{L}} (\mathbf{n} \cdot \mathbf{L} + T_1)  \\
+&= -G_{r1}^{2} \cdot \left( \nabla_{\mathbf{L}} (\mathbf{n} \cdot \mathbf{L}) + \nabla_{\mathbf{L}} T_1 \right)  \\
+\end{align}
+With
+\begin{align}
+\nabla_{\mathbf{L}} (\mathbf{n} \cdot \mathbf{L}) &= \mathbf{n}^T  \\
+\end{align}
+and
+\begin{align}
+\nabla_{\mathbf{L}} T_1 &= \frac{(1 - 0.25^{2})(\mathbf{n} \cdot \mathbf{L})}{T_1} \cdot \mathbf{n}^T  \\
+\Rightarrow \nabla_{\mathbf{L}} G_{r1} &= -G_{r1}^{2} \cdot \mathbf{n}^T \cdot \left( 1 + \frac{(1 - 0.25^{2})(\mathbf{n} \cdot \mathbf{L})}{T_1} \right)
+\end{align}
+
+Otherwise $\nabla_{\mathbf{L}} G_{r1} = 0$.
+
+### $\nabla_{\mathbf{L}} D_r$
+
+\begin{align}
+D_r &= \frac{a_2 - 1}{\pi \log(a_2) \cdot M}  \\
+M &= 1 + (a_2 - 1)(\mathbf{n} \cdot \mathbf{H})^{2}  \\
+\nabla_{\mathbf{L}} D_r &= \nabla_{\mathbf{L}} \left( \frac{a_2 - 1}{\pi \log(a_2) \cdot M} \right)  \\
+&= \frac{a_2 - 1}{\pi \log(a_2)} \cdot \nabla_{\mathbf{L}} \left( \frac{1}{M} \right)  \\
+&= \frac{a_2 - 1}{\pi \log(a_2)} \cdot \left( -\frac{1}{M^{2}} \cdot \nabla_{\mathbf{L}} M \right)  \\
+&= -\frac{a_2 - 1}{\pi \log(a_2) M^{2}} \cdot \nabla_{\mathbf{L}} M  \\
+\end{align}
+
+With
+\begin{align}
+\nabla_{\mathbf{L}} M &= 2(a_2 - 1)(\mathbf{n} \cdot \mathbf{H}) \cdot \mathbf{n}^T \cdot \nabla_{\mathbf{L}} \mathbf{H}  \\
+\Rightarrow \nabla_{\mathbf{L}} D_r &= -\frac{2(a_2 - 1)^{2} (\mathbf{n} \cdot \mathbf{H})}{\pi \log(a_2) M^{2}} \cdot \mathbf{n}^T \cdot \nabla_{\mathbf{L}} \mathbf{H}
+\end{align}
+
+
+
+
+## $\nabla_{\mathbf{V}}$ BRDF
+Same structure as for $\nabla_\mathbf{L}$.
+
+The gradient of the BRDF with respect to the view direction $\mathbf{V}$ is a $3\times 3$ Jacobian matrix $\nabla_\mathbf{V} BRDF$.
+
+\begin{align}
+\nabla_{\mathbf{V}}\text{BRDF} &=
+\nabla_{\mathbf{V}}\left[\left(\frac{1}{\pi} \text{mix}(F_d, ss, P_{ss}) \cdot \mathbf{C_{dlin}} + \mathbf{F_{sheen}}\right) \cdot (1 - P_{m})\right] +  \\
+&\quad \nabla_{\mathbf{V}}\left[ G_s \cdot \mathbf{F_s} \cdot D_s\right] +  \\
+&\quad \nabla_{\mathbf{V}} \left[0.25 \cdot P_c \cdot G_r \cdot F_r \cdot D_r\right]  \\
+&=
+(1 - P_m) \cdot \left[ \frac{1}{\pi} \cdot \mathbf{C_{dlin}} \otimes \nabla_{\mathbf{V}} \text{mix}(F_d, ss, P_{ss}) + \nabla_{\mathbf{V}} \mathbf{F_{sheen}} \right]  \\
+&\quad + \mathbf{F_s} \otimes \left( D_s \cdot \nabla_{\mathbf{V}} G_s + G_s \cdot \nabla_{\mathbf{V}} D_s \right) + G_s \cdot D_s \cdot \nabla_{\mathbf{V}} \mathbf{F_s}  \\
+&\quad + 0.25 \cdot P_c \cdot F_r \cdot \mathbf{1} \otimes \left( D_r \cdot \nabla_{\mathbf{V}} G_r + G_r \cdot \nabla_{\mathbf{V}} D_r \right) + 0.25 \cdot P_c \cdot G_r \cdot D_r \cdot \nabla_{\mathbf{V}} F_r
+\end{align}
+
+!!! Note
+      The derivatives of scalar terms w.r.t. to the view direction are themselves $1\times 3$ gradient vectors. We explicitly show the outer product as $\otimes$, which yields a $3\times 3$ matrix.
+
+### Fundamental Building Blocks:
+
+The half-vector $\mathbf{H} = \frac{\mathbf{L} + \mathbf{V}}{|\mathbf{L} + \mathbf{V}|}$ depends on $\mathbf{V}$:
+
+\begin{align}
+\mathbf{H} &= \frac{\mathbf{L} + \mathbf{V}}{|\mathbf{L} + \mathbf{V}|} = \frac{\mathbf{S}}{s}  \\
+\text{where } \mathbf{S} &= \mathbf{L} + \mathbf{V}, \quad s = |\mathbf{S}|
+\end{align}
+
+Quotient rule:
+\begin{align}
+\nabla_{\mathbf{V}} \mathbf{H} &= \nabla_{\mathbf{V}} \left( \frac{\mathbf{S}}{s} \right)  \\
+&= \frac{1}{s} \cdot \nabla_{\mathbf{V}} \mathbf{S} - \frac{1}{s^{2}} \cdot \mathbf{S} \otimes \nabla_{\mathbf{V}} s
+\end{align}
+
+With $\nabla_{\mathbf{V}} \mathbf{S}$
+\begin{align}
+\mathbf{S} &= \mathbf{L} + \mathbf{V}  \\
+\nabla_{\mathbf{V}} \mathbf{S} &= \nabla_{\mathbf{V}} (\mathbf{L} + \mathbf{V})  \\
+&= \mathbf{I} \quad \text{(3×3 identity matrix)}
+\end{align}
+
+and $\nabla_{\mathbf{V}} s$
+\begin{align}
+s &= |\mathbf{S}| = \sqrt{\mathbf{S} \cdot \mathbf{S}}  \\
+\nabla_{\mathbf{V}} s &= \nabla_{\mathbf{V}} \sqrt{\mathbf{S} \cdot \mathbf{S}}  \\
+&= \frac{1}{2\sqrt{\mathbf{S} \cdot \mathbf{S}}} \cdot \nabla_{\mathbf{V}} (\mathbf{S} \cdot \mathbf{S})  \\
+&= \frac{1}{2s} \cdot 2\mathbf{S}^T \cdot \nabla_{\mathbf{V}} \mathbf{S} \quad \text{(using chain rule)}  \\
+&= \frac{1}{s} \cdot \mathbf{S}^T \cdot \mathbf{I}  \\
+&= \frac{1}{s} \cdot \mathbf{S}^T \\
+&= \frac{1}{|L+V|} \cdot (\mathbf{L}+\mathbf{V})^T
+\end{align}
+
+Substitute back into quotient rule
+
+\begin{align}
+\nabla_{\mathbf{V}} \mathbf{H} &=
+\frac{1}{s} \cdot \nabla_{\mathbf{V}} \mathbf{S} - \frac{1}{s^{2}} \cdot \mathbf{S} \otimes \nabla_{\mathbf{V}} s \\
+&= \frac{1}{|\mathbf{L}+\mathbf{V}|} \cdot \mathbf{I} - \frac{1}{|\mathbf{L}+\mathbf{V}|^{2}} \cdot (\mathbf{L}+\mathbf{V}) \otimes \frac{1}{|\mathbf{L}+\mathbf{V}|} \cdot (\mathbf{L}+\mathbf{V})^T \\
+&= \frac{1}{|\mathbf{L}+\mathbf{V}|} \cdot \mathbf{I} - \frac{1}{|\mathbf{L}+\mathbf{V}|} \cdot \mathbf{H} \otimes \mathbf{H}^T \\
+&= \frac{1}{|\mathbf{L} + \mathbf{V}|} \left( \mathbf{I} - \mathbf{H}\otimes \mathbf{H}^T \right)
+\end{align}
+
+This 3×3 matrix will appear in many derivatives.
+
+### $\nabla_{\mathbf{V}} \text{mix}(F_d, ss, P_{ss})$
+
+\begin{align}
+\text{mix}(F_d, ss, P_{ss}) &= F_d + P_{ss}(ss - F_d)  \\
+\nabla_{\mathbf{V}} \text{mix}(F_d, ss, P_{ss}) &= (1 - P_{ss}) \cdot \nabla_{\mathbf{V}} F_d + P_{ss} \cdot \nabla_{\mathbf{V}} ss
+\end{align}
+
+### $\nabla_{\mathbf{V}} F_d$
+
+\begin{align}
+F_d &= [1 + F_L(F_{d90} - 1)] \cdot [1 + F_V(F_{d90} - 1)]  \\
+\nabla_{\mathbf{V}} F_d &= [1 + F_L(F_{d90} - 1)] \cdot (F_{d90} - 1) \cdot \nabla_{\mathbf{V}} F_V  \\
+&\quad + [1 + F_L(F_{d90} - 1)] \cdot [1 + F_V(F_{d90} - 1)] \cdot \nabla_{\mathbf{V}} F_{d90}
+\end{align}
+
+### $\nabla_{\mathbf{V}} F_{d90}$
+
+\begin{align}
+F_{d90} &= 0.5 + 2 (\mathbf{L}\cdot\mathbf{H})^{2} \cdot P_r  \\
+\nabla_{\mathbf{V}} F_{d90} &= 4 P_r (\mathbf{L}\cdot\mathbf{H}) \cdot \nabla_{\mathbf{V}} (\mathbf{L}\cdot\mathbf{H})
+\end{align}
+
+### $\nabla_{\mathbf{V}} (\mathbf{L}\cdot\mathbf{H})$
+
+\begin{align}
+\nabla_{\mathbf{V}} (\mathbf{L}\cdot\mathbf{H}) &= \mathbf{L}^T \cdot \nabla_{\mathbf{V}} \mathbf{H}
+\end{align}
+
+### $\nabla_{\mathbf{V}} F_V$
+
+\begin{align}
+F_V &= \text{schlick}(\max(0, \mathbf{n} \cdot \mathbf{V}))  \\
+\text{schlick}(u) &= \text{clamp}(1 - u, 0, 1)^{5}
+\end{align}
+
+For $n\cdot \mathbf{V} > 0$:
+\begin{align}
+F_V &= \text{schlick}(\mathbf{n} \cdot \mathbf{V})  \\
+&= [1 - (\mathbf{n} \cdot \mathbf{V})]^{5}
+\end{align}
+
+Then:
+\begin{align}
+\nabla_{\mathbf{V}} F_V &= \nabla_{\mathbf{V}} [1 - (\mathbf{n} \cdot \mathbf{V})]^{5}  \\
+&= 5[1 - (\mathbf{n} \cdot \mathbf{V})]^{4} \cdot \nabla_{\mathbf{V}} [1 - (\mathbf{n} \cdot \mathbf{V})]  \\
+&= 5[1 - (\mathbf{n} \cdot \mathbf{V})]^{4} \cdot (-\nabla_{\mathbf{V}} (\mathbf{n} \cdot \mathbf{V}))  \\
+&= -5[1 - (\mathbf{n} \cdot \mathbf{V})]^{4} \cdot \nabla_{\mathbf{V}} (\mathbf{n} \cdot \mathbf{V})
+\end{align}
+
+With
+\begin{align}
+\nabla_{\mathbf{V}} (\mathbf{n} \cdot \mathbf{V}) &= \mathbf{n}^T
+\end{align}
+
+We get
+\begin{align}
+\nabla_{\mathbf{V}} F_V &= -5[1 - (\mathbf{n} \cdot \mathbf{V})]^{4} \cdot \mathbf{n}^T
+\end{align}
+
+For $n\cdot V \leq 0$:
+\begin{align}
+\max(0, \mathbf{n} \cdot \mathbf{V}) &= 0  \\
+F_V &= \text{schlick}(0) = (1 - 0)^{5} = 1  \\
+\nabla_{\mathbf{V}} F_V &= \mathbf{0}
+\end{align}
+
+
+### $\nabla_{\mathbf{V}} ss$
+
+\begin{align}
+ss &= 1.25 \left[ F_{ss} \cdot \left( \frac{1}{D_{\text{sum}}} - 0.5 \right) + 0.5 \right]  \\
+D_{\text{sum}} &= \max(10^{-6}, \mathbf{n} \cdot \mathbf{L}) + \max(10^{-6}, \mathbf{n} \cdot \mathbf{V})  \\
+\nabla_{\mathbf{V}} ss &= 1.25 \left[ \left( \frac{1}{D_{\text{sum}}} - 0.5 \right) \cdot \nabla_{\mathbf{V}} F_{ss} + F_{ss} \cdot \nabla_{\mathbf{V}} \left( \frac{1}{D_{\text{sum}}} \right) \right]
+\end{align}
+
+### $\nabla_{\mathbf{V}} F_{ss}$
+
+\begin{align}
+F_{ss} &= [1 + F_L(F_{ss90} - 1)] \cdot [1 + F_V(F_{ss90} - 1)]  \\
+\nabla_{\mathbf{V}} F_{ss} &= [1 + F_L(F_{ss90} - 1)] \cdot (F_{ss90} - 1) \cdot \nabla_{\mathbf{V}} F_V  \\
+&\quad + [1 + F_L(F_{ss90} - 1)] \cdot [1 + F_V(F_{ss90} - 1)] \cdot \nabla_{\mathbf{V}} F_{ss90}
+\end{align}
+
+### $\nabla_{\mathbf{V}} F_{ss90}$
+
+\begin{align}
+F_{ss90} &= (\mathbf{L}\cdot \mathbf{H})^{2} \cdot P_r  \\
+\nabla_{\mathbf{V}} F_{ss90} &= 2 P_r (\mathbf{L}\cdot \mathbf{H}) \cdot \nabla_{\mathbf{V}} (\mathbf{L}\cdot \mathbf{H})
+\end{align}
+
+### $\nabla_{\mathbf{V}} \left( \frac{1}{D_{\text{sum}}} \right)$
+
+\begin{align}
+\nabla_{\mathbf{V}} \left( \frac{1}{D_{\text{sum}}} \right) &= -\frac{1}{D_{\text{sum}}^{2}} \cdot \nabla_{\mathbf{V}} D_{\text{sum}}  \\
+\nabla_{\mathbf{V}} D_{\text{sum}} &= \nabla_{\mathbf{V}} \max(10^{-6}, \mathbf{n} \cdot \mathbf{V})
+\end{align}
+
+With
+\begin{align}
+\nabla_{\mathbf{V}} \max(10^{-6}, \mathbf{n} \cdot \mathbf{V}) &=
+\begin{cases}
+\mathbf{n}^{T} & \text{if } \mathbf{n} \cdot \mathbf{V} > 10^{-6}  \\
+\mathbf{0} & \text{else}
+\end{cases}
+\end{align}
+
+### $\nabla_{\mathbf{V}} \mathbf{F_{sheen}}$
+
+\begin{align}
+\mathbf{F_{sheen}} &= F_H \cdot P_{sh} \cdot \mathbf{C_{sheen}}  \\
+\nabla_{\mathbf{V}} \mathbf{F_{sheen}} &= P_{sh} \cdot \mathbf{C_{sheen}} \otimes \nabla_{\mathbf{V}} F_H
+\end{align}
+
+### $\nabla_{\mathbf{V}} F_H$
+
+This uses the same derivation as $\nabla_{\mathbf{V}}F_L$
+\begin{align}
+F_H &= \text{schlick}(\mathbf{L}\cdot \mathbf{H})  \\
+\nabla_{\mathbf{V}} F_H &= -5(1 - \mathbf{L}\cdot \mathbf{H})^{4} \cdot \nabla_{\mathbf{V}} (\mathbf{L}\cdot \mathbf{H})
+\end{align}
+
+### $\nabla_{\mathbf{L}} G_s$
+
+\begin{align}
+G_s &= G_1 \cdot G_2  \\
+G_1 &= \text{smithG}(\mathbf{n} \cdot \mathbf{L}, \mathbf{L} \cdot \mathbf{X}, \mathbf{L} \cdot \mathbf{Y}, a_x, a_y)  \\
+G_2 &= \text{smithG}(\mathbf{n} \cdot \mathbf{V}, \mathbf{V} \cdot \mathbf{X}, \mathbf{V} \cdot \mathbf{Y}, a_x, a_y)  \\
+\nabla_{\mathbf{V}} G_s &= G_1 \cdot \nabla_{\mathbf{V}} G_2
+\end{align}
+
+### $\nabla_{\mathbf{V}} G_2$ (for $\mathbf{n} \cdot \mathbf{V} \geq 0$)
+
+\begin{align}
+G_2 &= \frac{1}{\mathbf{n} \cdot \mathbf{V} + S_2}  \\
+S_2 &= \sqrt{(\mathbf{V} \cdot \mathbf{X} \cdot a_x)^{2} + (\mathbf{V} \cdot \mathbf{Y} \cdot a_y)^{2} + (\mathbf{n} \cdot \mathbf{V})^{2}}  \\
+\nabla_{\mathbf{V}} G_2 &= \nabla_{\mathbf{V}} \left( \frac{1}{\mathbf{n} \cdot \mathbf{V} + S_2} \right)  \\
+&= -\frac{1}{(\mathbf{n} \cdot \mathbf{V} + S_2)^{2}} \cdot \nabla_{\mathbf{V}} (\mathbf{n} \cdot \mathbf{V} + S_2)  \\
+&= -G_2^{2} \cdot \left( \nabla_{\mathbf{V}} (\mathbf{n} \cdot \mathbf{V}) + \nabla_{\mathbf{V}} S_2 \right)  \\
+\end{align}
+With
+\begin{align}
+\nabla_{\mathbf{V}} (\mathbf{n} \cdot \mathbf{V}) &= \mathbf{n}^T
+\end{align}
+And
+\begin{align}
+\nabla_{\mathbf{V}} S_2 &= \frac{1}{2\cdot S_2} \nabla_{\mathbf{V}} \left[(\mathbf{V} \cdot \mathbf{X} \cdot a_x)^{2} + (\mathbf{V} \cdot \mathbf{Y} \cdot a_y)^{2} + (\mathbf{n} \cdot \mathbf{V})^{2}\right]  \\
+&= \frac{1}{2\cdot S_2} \left[ 2\cdot a_x^{2}\cdot(\mathbf{V} \cdot \mathbf{X}) \cdot \mathbf{X}^T + 2\cdot a_y^{2}\cdot (\mathbf{V} \cdot \mathbf{Y}) \cdot \mathbf{Y}^T + 2\cdot(\mathbf{n} \cdot \mathbf{V}) \cdot \mathbf{n}^T \right]  \\
+&= \frac{1}{ S_2} \left( a_x^{2}\cdot(\mathbf{V} \cdot \mathbf{X}) \cdot \mathbf{X}^T + a_y^{2}\cdot (\mathbf{V} \cdot \mathbf{Y}) \cdot \mathbf{Y}^T + (\mathbf{n} \cdot \mathbf{V}) \cdot \mathbf{n}^T \right )  \\
+\end{align}
+
+### $\nabla_{\mathbf{V}} D_s$
+
+\begin{align}
+D_s &= \frac{1}{\pi a_x a_y E^{2}}  \\
+E &= \left(\frac{\mathbf{H} \cdot \mathbf{X}}{a_x}\right)^{2} + \left(\frac{\mathbf{H} \cdot \mathbf{Y}}{a_y}\right)^{2} + (\mathbf{n} \cdot \mathbf{H})^{2}  \\
+\nabla_{\mathbf{V}} D_s &= \nabla_{\mathbf{V}} \left( \frac{1}{\pi a_x a_y E^{2}} \right)  \\
+&= \frac{1}{\pi a_x a_y} \cdot \nabla_{\mathbf{V}} \left( E^{-2} \right)  \\
+&= \frac{1}{\pi a_x a_y} \cdot \left( -2E^{-3} \cdot \nabla_{\mathbf{V}} E \right)  \\
+&= -\frac{2}{\pi a_x a_y E^{3}} \cdot \nabla_{\mathbf{V}} E  \\
+&= -\frac{2 D_s}{E} \cdot \nabla_{\mathbf{V}} E  \\
+\end{align}
+
+With
+\begin{align}
+\nabla_{\mathbf{V}} E &= 2 \left[ \frac{\mathbf{H} \cdot \mathbf{X}}{a_x^{2}} \cdot \mathbf{X}^T + \frac{\mathbf{H} \cdot \mathbf{Y}}{a_y^{2}} \cdot \mathbf{Y}^T + (\mathbf{n} \cdot \mathbf{H}) \cdot \mathbf{n}^T \right] \cdot \nabla_{\mathbf{V}} \mathbf{H}  \\
+\Rightarrow \nabla_{\mathbf{V}} D_s &= -\frac{4 D_s}{E} \cdot \left[ \frac{\mathbf{H} \cdot \mathbf{X}}{a_x^{2}} \cdot \mathbf{X}^T + \frac{\mathbf{H} \cdot \mathbf{Y}}{a_y^{2}} \cdot \mathbf{Y}^T + (\mathbf{n} \cdot \mathbf{H}) \cdot \mathbf{n}^T \right] \cdot \nabla_{\mathbf{V}} \mathbf{H}
+\end{align}
+
+### $\nabla_{\mathbf{V}} F_s$
+
+\begin{align}
+\mathbf{F_s} &= \text{mix}(\mathbf{C_{spec0}}, \mathbf{1}, F_H)  \\
+&= \mathbf{C_{spec0}} + F_H \cdot (\mathbf{1} - \mathbf{C_{spec0}})  \\
+\nabla_{\mathbf{V}} \mathbf{F_s} &= (\mathbf{1} - \mathbf{C_{spec0}}) \otimes \nabla_{\mathbf{V}} F_H
+\end{align}
+
+### $\nabla_{\mathbf{V}} G_r$
+
+\begin{align}
+G_r &= G_{r1} \cdot G_{r2}  \\
+G_{r1} &= \text{smithGTR}(\mathbf{n} \cdot \mathbf{L})  \\
+G_{r2} &= \text{smithGTR}(\mathbf{n} \cdot \mathbf{V})  \\
+\nabla_{\mathbf{V}} G_r &= G_{r1} \cdot \nabla_{\mathbf{V}} G_{r2}
+\end{align}
+
+$\nabla_{\mathbf{V}} G_{r2}$ (for $\mathbf{n} \cdot \mathbf{L} \geq 0$)
+
+\begin{align}
+G_{r2} &= \frac{1}{\mathbf{n} \cdot \mathbf{V} + T_2}  \\
+T_2 &= \sqrt{0.25^{2} + (\mathbf{n} \cdot \mathbf{V})^{2} - 0.25^{2} \cdot (\mathbf{n} \cdot \mathbf{V})^{2}}  \\
+\nabla_{\mathbf{V}} G_{r2} &= \nabla_{\mathbf{V}} \left( \frac{1}{\mathbf{n} \cdot \mathbf{V} + T_2} \right)  \\
+&= -\frac{1}{(\mathbf{n} \cdot \mathbf{V} + T_2)^{2}} \cdot \nabla_{\mathbf{V}} (\mathbf{n} \cdot \mathbf{V} + T_2)  \\
+&= -G_{r2}^{2} \cdot \left( \nabla_{\mathbf{V}} (\mathbf{n} \cdot \mathbf{V}) + \nabla_{\mathbf{V}} T_2 \right)  \\
+\end{align}
+With
+\begin{align}
+\nabla_{\mathbf{V}} (\mathbf{n} \cdot \mathbf{V}) &= \mathbf{n}^T  \\
+\end{align}
+and
+\begin{align}
+\nabla_{\mathbf{V}} T_2 &= \frac{(1 - 0.25^{2})(\mathbf{n} \cdot \mathbf{V})}{T_2} \cdot \mathbf{n}^T  \\
+\Rightarrow \nabla_{\mathbf{V}} G_{r2} &= -G_{r2}^{2} \cdot \mathbf{n}^T \cdot \left( 1 + \frac{(1 - 0.25^{2})(\mathbf{n} \cdot \mathbf{V})}{T_2} \right)
+\end{align}
+
+Otherwise $\nabla_{\mathbf{V}} G_{r2} = 0$.
+
+### $\nabla_{\mathbf{V}} F_r$
+
+\begin{align}
+F_r &= \text{mix}(0.04, 1.0, F_H)  \\
+&= 0.04 + F_H \cdot (1.0 - 0.04)  \\
+&= 0.04 + 0.96 \cdot F_H  \\
+\nabla_{\mathbf{V}} F_r &= 0.96 \cdot \nabla_{\mathbf{V}} F_H
+\end{align}
+
+### $\nabla_{\mathbf{V}} D_r$
+
+\begin{align}
+D_r &= \frac{a_2 - 1}{\pi \log(a_2) \cdot M}  \\
+M &= 1 + (a_2 - 1)(\mathbf{n} \cdot \mathbf{H})^{2}  \\
+\nabla_{\mathbf{V}} D_r &= \nabla_{\mathbf{V}} \left( \frac{a_2 - 1}{\pi \log(a_2) \cdot M} \right)  \\
+&= \frac{a_2 - 1}{\pi \log(a_2)} \cdot \nabla_{\mathbf{V}} \left( \frac{1}{M} \right)  \\
+&= \frac{a_2 - 1}{\pi \log(a_2)} \cdot \left( -\frac{1}{M^{2}} \cdot \nabla_{\mathbf{V}} M \right)  \\
+&= -\frac{a_2 - 1}{\pi \log(a_2) M^{2}} \cdot \nabla_{\mathbf{V}} M  \\
+\end{align}
+
+With
+\begin{align}
+\nabla_{\mathbf{V}} M &= 2(a_2 - 1)(\mathbf{n} \cdot \mathbf{H}) \cdot \mathbf{n}^T \cdot \nabla_{\mathbf{V}} \mathbf{H}  \\
+\Rightarrow \nabla_{\mathbf{V}} D_r &= -\frac{2(a_2 - 1)^{2} (\mathbf{n} \cdot \mathbf{H})}{\pi \log(a_2) M^{2}} \cdot \mathbf{n}^T \cdot \nabla_{\mathbf{V}} \mathbf{H}
+\end{align}
+
 
 
 
