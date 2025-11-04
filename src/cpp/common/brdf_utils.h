@@ -56,7 +56,7 @@ struct Vec3 {
 
   // In-place normalization
   HOST_DEVICE Vec3 &normalize() {
-    float len = sqrtf(x * x + y * y + z * z);
+    float len = this->abs();
     if (len > 0) {
       float inv_len = 1.F / len;
       x *= inv_len;
@@ -64,6 +64,11 @@ struct Vec3 {
       z *= inv_len;
     }
     return *this;
+  }
+
+  HOST_DEVICE float abs() {
+    const float len = sqrtf(x * x + y * y + z * z);
+    return len;
   }
 
   // outer product (resulting in Mat3x3)
@@ -91,6 +96,9 @@ struct Mat3x3 {
     result.m[4] = vec.y;
     result.m[8] = vec.z;
     return result;
+  }
+  static HOST_DEVICE auto eye() -> Mat3x3 {
+    return Mat3x3::diag({1.F, 1.F, 1.F});
   }
 
   // Mat3x3 * Vec3 (Matrix times 3x1 Vector)
@@ -808,7 +816,8 @@ HOST_DEVICE inline Vec3 nabla_n_D_s(const Vec3 &H, const float P_r,
   return -(4.F * D_s(H, n, P_ani, P_r) / E) * nH * H;
 }
 // returns a gradient vector (1x3)
-HOST_DEVICE inline Vec3 nabla_n_GrX(const Vec3 &LV, const float nLV, const float GrX) {
+HOST_DEVICE inline Vec3 nabla_n_GrX(const Vec3 &LV, const float nLV,
+                                    const float GrX) {
   const float T1 = sqrtf(0.25F * 0.25F + nLV * nLV + 0.25F * 0.25F * nLV * nLV);
   return -GrX * GrX * LV * (1.F + nLV * (1.F - 0.25F * 0.25F) / T1);
 }
@@ -820,9 +829,148 @@ HOST_DEVICE inline Vec3 nabla_n_G_r(const Vec3 &L, const Vec3 &V,
   return Gr2 * nabla_n_GrX(L, n * L, Gr1) + Gr1 * nabla_n_GrX(V, n * V, Gr2);
 }
 // returns a gradient vector (1x3)
-HOST_DEVICE inline Vec3 nabla_n_D_r(const Vec3& H, const float P_cg, const Vec3& n){
+HOST_DEVICE inline Vec3 nabla_n_D_r(const Vec3 &H, const float P_cg,
+                                    const Vec3 &n) {
   const float a2 = a_2(P_cg);
-  const float nH = n*H;
-  const float M = 1.F + (a2-1.F)*nH*nH;
-  return - (2*(a2-1.F)*(a2-1.F)*nH)/(M_PIf*logf(a2)*M*M) * H;
+  const float nH = n * H;
+  const float M = 1.F + (a2 - 1.F) * nH * nH;
+  return -(2 * (a2 - 1.F) * (a2 - 1.F) * nH) / (M_PIf * logf(a2) * M * M) * H;
+}
+
+// nabla_n_BRDF
+HOST_DEVICE inline Mat3x3 nabla_L_H(const Vec3 &L, const Vec3 &V,
+                                    const Vec3 &H) {
+  return (1.F / (L + V).abs()) * (Mat3x3::eye() - H.odot(H));
+}
+// returns a gradient vector (1x3)
+HOST_DEVICE inline Vec3 nabla_L_LH(const Vec3 &L, const Vec3 &V,
+                                   const Vec3 &H) {
+  return H + L * nabla_L_H(L, V, H);
+}
+// returns a gradient vector (1x3)
+HOST_DEVICE inline Vec3 nabla_L_F_d90(const Vec3 &L, const Vec3 &V,
+                                      const Vec3 &H, const float P_r) {
+  return 4 * P_r * (L * H) * (nabla_L_LH(L, V, H));
+}
+// returns a gradient vector (1x3)
+HOST_DEVICE inline Vec3 nabla_L_F_L(const Vec3 &L, const Vec3 &n) {
+  const float nL = n * L;
+  if (n * L <= 0.F) {
+    return Vec3{0.F, 0.F, 0.F};
+  }
+  const float value = (1.F - nL);
+  return -5.F * value * value * value * value * n;
+}
+// returns a gradient vector (1x3)
+HOST_DEVICE inline Vec3 nabla_L_F_d(const Vec3 &L, const Vec3 &V, const Vec3 &H,
+                                    const float P_r, const Vec3 &n) {
+  return (1.F + F_VL(n, V) * (F_d90(L, H, P_r) - 1.F)) *
+             (F_d90(L, H, P_r) - 1.F) * nabla_L_F_L(L, n) +
+         (1.F + F_VL(n, L) * (F_d90(L, H, P_r) - 1.F)) *
+             (1.F + F_VL(n, V) * (F_d90(L, H, P_r) - 1.F)) *
+             nabla_L_F_d90(L, V, H, P_r);
+}
+// returns a gradient vector (1x3)
+HOST_DEVICE inline Vec3 nabla_L_F_ss90(const Vec3 &L, const Vec3 &V,
+                                       const Vec3 &H, const float P_r) {
+  return 2.F * P_r * (L * H) * nabla_L_LH(L, V, H);
+}
+// returns a gradient vector (1x3)
+HOST_DEVICE inline Vec3 nabla_L_F_ss(const Vec3 &L, const Vec3 &V,
+                                     const Vec3 &H, const float P_r,
+                                     const Vec3 &n) {
+  return (1.F + F_VL(n, V) * (F_ss90(L, H, P_r) - 1.F)) *
+             (F_ss90(L, H, P_r) - 1.F) * nabla_L_F_L(L, n) +
+         (1.F + F_VL(n, L) * (F_ss90(L, H, P_r) - 1.F)) *
+             (1.F + F_VL(n, V) * (F_ss90(L, H, P_r) - 1.F)) *
+             nabla_L_F_ss90(L, V, H, P_r);
+}
+// returns a gradient vector (1x3)
+HOST_DEVICE inline Vec3 nabla_L_D_sum_inv(const Vec3 &L, const float D_sum,
+                                          const Vec3 &n) {
+  if (n * L <= 1e-6) {
+    return {0.F, 0.F, 0.F};
+  }
+  return -1.F / (D_sum * D_sum) * n;
+}
+// returns a gradient vector (1x3)
+HOST_DEVICE inline Vec3 nabla_L_ss(const Vec3 &L, const Vec3 &V, const Vec3 &H,
+                                   const float P_r, const Vec3 &n) {
+  const float D_sum = fmaxf(1e-6F, n * L) + fmaxf(1e-6F, n * V);
+  return 1.25F * ((1.F / D_sum - 0.5F) * nabla_L_F_ss(L, V, H, P_r, n) +
+                  F_ss(V, L, H, n, P_r) * nabla_L_D_sum_inv(L, D_sum, n));
+}
+// returns a gradient vector (1x3)
+HOST_DEVICE inline Vec3 nabla_L_mix(const Vec3 &L, const Vec3 &V, const Vec3 &H,
+                                    const float P_ss, const float P_r,
+                                    const Vec3 &n) {
+  return (1.F - P_ss) * nabla_L_F_d(L, V, H, P_r, n) +
+         P_ss * nabla_L_ss(L, V, H, P_r, n);
+}
+HOST_DEVICE inline Vec3 nabla_L_F_H(const Vec3 &L, const Vec3 &V,
+                                    const Vec3 &H) {
+  const float value = 1.F - L * H;
+  return -5.F * value * value * value * value * nabla_L_LH(L, V, H);
+}
+HOST_DEVICE inline Mat3x3 nabla_L_F_sheen(const Vec3 &L, const Vec3 &V,
+                                          const Vec3 &H, const Vec3 &P_b,
+                                          const float P_sh, const float P_sht) {
+  return P_sh * C_sheen(P_b, P_sht).odot(nabla_L_F_H(L, V, H));
+}
+// returns a gradient vector (1x3)
+HOST_DEVICE inline Vec3 nabla_L_G_s(const Vec3 &L, const Vec3 &V,
+                                    const float P_r, const float P_ani,
+                                    const Vec3 &n) {
+  const Vec3 X = Vec3{1.F, 0.F, 0.F};
+  const Vec3 Y = Vec3{0.F, 1.F, 0.F};
+  const float ax = a_x(P_ani, P_r);
+  const float ay = a_y(P_ani, P_r);
+  const float G1 = smithG(n * L, L * X, L * Y, ax, ay);
+  const float G2 = smithG(n * V, V * X, V * Y, ax, ay);
+  const float lxax = L * X * ax;
+  const float lyay = L * Y * ay;
+  const float nl = n * L;
+  const float S1 = sqrtf(lxax * lxax + lyay * lyay * nl * nl);
+  const Vec3 nabla_L_S1 = (1.F / S1) * (ax * ax * (L * X) * X +
+                                        ay * ay * (L * Y) * Y + (n * L) * n);
+  const Vec3 nabla_L_G1 = -G1 * G1 * (n + nabla_L_S1);
+  return G2 * nabla_L_G1;
+}
+// returns a gradient vector (1x3)
+HOST_DEVICE inline Vec3 nabla_L_D_s(const Vec3 &L, const Vec3 &V, const Vec3 &H,
+                                    const float P_r, const float P_ani,
+                                    const Vec3 &n) {
+  const Vec3 X = Vec3{1.F, 0.F, 0.F};
+  const Vec3 Y = Vec3{0.F, 1.F, 0.F};
+  const float ax = a_x(P_ani, P_r);
+  const float ay = a_y(P_ani, P_r);
+  const float HX_ax = H * X / ax;
+  const float HY_ay = H * Y / ay;
+  const float nH = n * H;
+
+  const float E = HX_ax * HX_ax + HY_ay * HY_ay + nH * nH;
+  return -(4.F * D_s(H, n, P_ani, P_r) / E) *
+         ((HX_ax / ax) * X + (HY_ay / ay) * Y + nH * n) * nabla_L_H(L, V, H);
+}
+// returns a gradient vector (1x3)
+HOST_DEVICE inline Vec3 nabla_L_G_r(const Vec3 &L, const Vec3 &V,
+                                    const Vec3 &n) {
+  const float nL = n * L;
+  if (nL < 0) {
+    return {0.F, 0.F, 0.F};
+  }
+  const float Gr1 = smithGTR(n * L);
+  const float Gr2 = smithGTR(n * V);
+  const float T1 = sqrtf(0.25F * 0.25F + nL * nL - 0.25F * 0.25F * nL * nL);
+  const Vec3 nabla_L_Gr1 =
+      -Gr1 * Gr1 * n * (1.F + (1.F - 0.25F * 0.25F) * (n * L)) / T1;
+  return Gr2 * nabla_L_Gr1;
+}
+// returns a gradient vector (1x3)
+HOST_DEVICE inline Vec3 nabla_L_D_r(const Vec3 &L, const Vec3 &V, const Vec3 &H,
+                                    const float P_cg, const Vec3 &n) {
+  const float M = 1.F + (a_2(P_cg) - 1.F) * (n * H) * (n * H);
+  return -((2.F * (a_2(P_cg) - 1.F) * (a_2(P_cg) - 1.F) * (n * H)) /
+           (M_PIf * logf(a_2(P_cg)) * M * M)) *
+         n * nabla_L_H(L, V, H);
 }
