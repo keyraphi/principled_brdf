@@ -1787,7 +1787,6 @@ F_d &= [1 + F_L(F_{d90} - 1)] \cdot [1 + F_V(F_{d90} - 1)]  \\
 \begin{align}
 F_{d90} &= 0.5 + 2 (\mathbf{L}\cdot\mathbf{H})^{2} \cdot P_r  \\
 \nabla_{\mathbf{L}} F_{d90} &= 4 P_r (\mathbf{L}\cdot\mathbf{H}) \cdot \nabla_{\mathbf{L}} (\mathbf{L}\cdot\mathbf{H}) 
-\nabla_{\mathbf{L}} (\mathbf{L}\cdot\mathbf{H}) &= \mathbf{H}^T + \mathbf{L}^T \cdot \nabla_{\mathbf{L}} \mathbf{H}
 \end{align}
 
 ### $\nabla_{\mathbf{L}} (\mathbf{L}\cdot\mathbf{H})$
@@ -2065,8 +2064,9 @@ F_d &= [1 + F_L(F_{d90} - 1)] \cdot [1 + F_V(F_{d90} - 1)]  \\
 ### $\nabla_{\mathbf{V}} F_{d90}$
 
 \begin{align}
-F_{d90} &= 0.5 + 2 (\mathbf{L}\cdot\mathbf{H})^{2} \cdot P_r  \\
-\nabla_{\mathbf{V}} F_{d90} &= 4 P_r (\mathbf{L}\cdot\mathbf{H}) \cdot \nabla_{\mathbf{V}} (\mathbf{L}\cdot\mathbf{H})
+F_{d90} &= 0.5 + 2 (\mathbf{L}\cdot\mathbf{H})^{2} \cdot P_r \\
+\nabla_{\mathbf{V}} F_{d90} &= 4 P_r (\mathbf{L}\cdot\mathbf{H}) \cdot \nabla_{\mathbf{V}} 
+(\mathbf{L}\cdot\mathbf{H})
 \end{align}
 
 ### $\nabla_{\mathbf{V}} (\mathbf{L}\cdot\mathbf{H})$
