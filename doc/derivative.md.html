@@ -1606,9 +1606,22 @@ We again use substitution here to simplify:
 \begin{align}
 D_s &= \frac{1}{\pi a_x a_y E^{2}} \\
 E &= \left(\frac{\mathbf{H} \cdot \mathbf{X}}{a_x}\right)^{2} + \left(\frac{\mathbf{H} \cdot \mathbf{Y}}{a_y}\right)^{2} + (\mathbf{n} \cdot \mathbf{H})^{2} \\
-\nabla_{\mathbf{n}} D_s &= -\frac{2D_s}{E} \cdot \nabla_{\mathbf{n}} E \\
-\nabla_{\mathbf{n}} E &= 2(\mathbf{n} \cdot \mathbf{H}) \cdot \mathbf{H}^{T} \\
-\Rightarrow \nabla_{\mathbf{n}} D_s &= -\frac{4D_s}{E} \cdot (\mathbf{n} \cdot \mathbf{H}) \cdot \mathbf{H}^{T}
+\nabla_{\mathbf{n}} D_s &= \nabla_{\mathbf{n}} \left( \frac{1}{\pi a_x a_y E^{2}} \right) \\
+&= \frac{1}{\pi a_x a_y} \cdot \nabla_{\mathbf{n}} \left( E^{-2} \right) \\
+&= \frac{1}{\pi a_x a_y} \cdot \left( -2E^{-3} \cdot \nabla_{\mathbf{n}} E \right)\\ 
+&= -\frac{2}{\pi a_x a_y E^{3}} \cdot \nabla_{\mathbf{n}} E \\
+&= -\frac{2 D_s }{E} \cdot \nabla_{\mathbf{n}} E 
+\end{align}
+With
+\begin{align}
+\nabla_{\mathbf{n}} E &= \nabla_{\mathbf{n}} \left[ \left(\frac{\mathbf{H} \cdot \mathbf{X}}{a_x}\right)^{2} + \left(\frac{\mathbf{H} \cdot \mathbf{Y}}{a_y}\right)^{2} + (\mathbf{n} \cdot \mathbf{H})^{2} \right] \\
+&= 0 + 0 + 2(\mathbf{n} \cdot \mathbf{H}) \cdot \nabla_{\mathbf{n}} (\mathbf{n} \cdot \mathbf{H})\\
+&= 2(\mathbf{n} \cdot \mathbf{H}) \cdot \mathbf{H}^{T} \\
+\end{align}
+Thus:
+\begin{align}
+\Rightarrow \nabla_{\mathbf{n}} D_s &= -\frac{2 D_s}{E} \cdot 2(\mathbf{n} \cdot \mathbf{H}) \cdot \mathbf{H}^{T} \\
+&= -\frac{4 D_s}{E} \cdot (\mathbf{n} \cdot \mathbf{H}) \cdot \mathbf{H}^{T}
 \end{align}
 
 ### $\nabla_{\mathbf{n}} G_r$
