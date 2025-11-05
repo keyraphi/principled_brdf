@@ -1995,7 +1995,8 @@ The gradient of the BRDF with respect to the view direction $\mathbf{V}$ is a $3
 &=
 (1 - P_m) \cdot \left[ \frac{1}{\pi} \cdot \mathbf{C_{dlin}} \otimes \nabla_{\mathbf{V}} \text{mix}(F_d, ss, P_{ss}) + \nabla_{\mathbf{V}} \mathbf{F_{sheen}} \right]  \\
 &\quad + \mathbf{F_s} \otimes \left( D_s \cdot \nabla_{\mathbf{V}} G_s + G_s \cdot \nabla_{\mathbf{V}} D_s \right) + G_s \cdot D_s \cdot \nabla_{\mathbf{V}} \mathbf{F_s}  \\
-&\quad + 0.25 \cdot P_c \cdot F_r \cdot \mathbf{1} \otimes \left( D_r \cdot \nabla_{\mathbf{V}} G_r + G_r \cdot \nabla_{\mathbf{V}} D_r \right) + 0.25 \cdot P_c \cdot G_r \cdot D_r \cdot \nabla_{\mathbf{V}} F_r
+&\quad + 0.25 \cdot P_c \cdot \mathbf{1} \otimes \left(
+ F_r \cdot  \left( D_r \cdot \nabla_{\mathbf{V}} G_r + G_r \cdot \nabla_{\mathbf{V}} D_r \right) +  G_r \cdot D_r \cdot \nabla_{\mathbf{V}} F_r\right)
 \end{align}
 
 !!! Note
@@ -2165,7 +2166,11 @@ With
 This uses the same derivation as $\nabla_{\mathbf{V}}F_L$
 \begin{align}
 F_H &= \text{schlick}(\mathbf{L}\cdot \mathbf{H})  \\
-\nabla_{\mathbf{V}} F_H &= -5(1 - \mathbf{L}\cdot \mathbf{H})^{4} \cdot \nabla_{\mathbf{V}} (\mathbf{L}\cdot \mathbf{H})
+\nabla_{\mathbf{V}} F_H &= 
+\begin{cases}
+-5(1 - \mathbf{L}\cdot \mathbf{H})^{4} \cdot \nabla_{\mathbf{V}} (\mathbf{L}\cdot \mathbf{H}) & \text{if } \mathbf{L}\cdot \mathbf{H} >0\\
+\mathbf{0} & \text{else}
+\end{cases}
 \end{align}
 
 ### $\nabla_{\mathbf{L}} G_s$
@@ -2232,7 +2237,7 @@ G_{r2} &= \text{smithGTR}(\mathbf{n} \cdot \mathbf{V})  \\
 \nabla_{\mathbf{V}} G_r &= G_{r1} \cdot \nabla_{\mathbf{V}} G_{r2}
 \end{align}
 
-$\nabla_{\mathbf{V}} G_{r2}$ (for $\mathbf{n} \cdot \mathbf{L} \geq 0$)
+$\nabla_{\mathbf{V}} G_{r2}$ (for $\mathbf{n} \cdot \mathbf{V} \geq 0$)
 
 \begin{align}
 G_{r2} &= \frac{1}{\mathbf{n} \cdot \mathbf{V} + T_2}  \\
