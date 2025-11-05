@@ -386,9 +386,18 @@ void principled_brdf_backward_L_cpu_impl(
     Vec3 P_b_{P_b[i * 3], P_b[(i * 3) + 1], P_b[(i * 3) + 2]};
 
     const Mat3x3 nabla_L_BRDF =
-      (1.F - P_m[i]) * (M_1_PI * C_dlin(P_b_).odot(nabla_L_mix(L, V, H, P_ss[i], P_r[i], n_)) + nabla_L_F_sheen(L, V, H, P_b_, P_sh[i], P_sht[i])) +
-      F_s(L, H, P_b_, P_m[i], P_st[i], P_s[i]).odot(D_s(H, n_, P_ani[i], P_r[i]) * nabla_L_G_s(L, V, P_r[i], P_ani[i], n_) + G_s(L, V, n_, P_ani[i], P_r[i]) * nabla_L_D_s(L, V, H, P_r[i], P_ani[i], n_)) +
-      0.25F * P_c[i] * F_r(L, H) * Vec3{1.F, 1.F, 1.F}.odot(D_r(H, n_, P_c[i]) * nabla_L_G_r(L, V, n_) + G_r(L, V, n_) * nabla_L_D_r(L, V, H, P_cg[i], n_));
+        (1.F - P_m[i]) * (M_1_PI * C_dlin(P_b_).odot(nabla_L_mix(
+                                       L, V, H, P_ss[i], P_r[i], n_)) +
+                          nabla_L_F_sheen(L, V, H, P_b_, P_sh[i], P_sht[i])) +
+        F_s(L, H, P_b_, P_m[i], P_st[i], P_s[i])
+            .odot(D_s(H, n_, P_ani[i], P_r[i]) *
+                      nabla_L_G_s(L, V, P_r[i], P_ani[i], n_) +
+                  G_s(L, V, n_, P_ani[i], P_r[i]) *
+                      nabla_L_D_s(L, V, H, P_r[i], P_ani[i], n_)) +
+        0.25F * P_c[i] * F_r(L, H) *
+            Vec3{1.F, 1.F, 1.F}.odot(
+                D_r(H, n_, P_c[i]) * nabla_L_G_r(L, V, n_) +
+                G_r(L, V, n_) * nabla_L_D_r(L, V, H, P_cg[i], n_));
     result[9 * i + 0] = nabla_L_BRDF.m[0];
     result[9 * i + 1] = nabla_L_BRDF.m[1];
     result[9 * i + 2] = nabla_L_BRDF.m[2];
@@ -398,5 +407,52 @@ void principled_brdf_backward_L_cpu_impl(
     result[9 * i + 6] = nabla_L_BRDF.m[6];
     result[9 * i + 7] = nabla_L_BRDF.m[7];
     result[9 * i + 8] = nabla_L_BRDF.m[8];
+  }
+}
+
+void principled_brdf_backward_V_cpu_impl(
+    const float *__restrict__ omega_i, const float *__restrict__ omega_o,
+    const float *__restrict__ P_b, const float *__restrict__ P_m,
+    const float *__restrict__ P_ss, const float *__restrict__ P_s,
+    const float *__restrict__ P_r, const float *__restrict__ P_st,
+    const float *__restrict__ P_ani, const float *__restrict__ P_sh,
+    const float *__restrict__ P_sht, const float *__restrict__ P_c,
+    const float *__restrict__ P_cg, const float *__restrict__ n,
+    float *__restrict__ result, size_t N) {
+#pragma omp parallel for
+  for (size_t i = 0; i < N; ++i) {
+    const Vec3 L(omega_i[i * 3], omega_i[(i * 3) + 1], omega_i[(i * 3) + 2]);
+    const Vec3 V(omega_o[i * 3], omega_o[(i * 3) + 1], omega_o[(i * 3) + 2]);
+    const Vec3 H = (V + L).normalize();
+
+    Vec3 n_{n[i * 3], n[(i * 3) + 1], n[(i * 3) + 2]};
+    Vec3 P_b_{P_b[i * 3], P_b[(i * 3) + 1], P_b[(i * 3) + 2]};
+
+    const Mat3x3 nabla_V_BRDF =
+        (1.F - P_m[i]) * (M_1_PI * C_dlin(P_b_).odot(nabla_V_mix(
+                                       L, V, H, P_ss[i], P_r[i], n_)) +
+                          nabla_V_F_sheen(L, V, H, P_b_, P_sh[i], P_sht[i])) +
+        F_s(L, H, P_b_, P_m[i], P_st[i], P_s[i])
+            .odot(D_s(H, n_, P_ani[i], P_r[i]) *
+                      nabla_V_G_s(L, V, P_r[i], P_ani[i], n_) +
+                  G_s(L, V, n_, P_ani[i], P_r[i]) *
+                      nabla_V_D_s(L, V, H, P_r[i], P_ani[i], n_)) +
+        G_s(L, V, n_, P_ani[i], P_r[i]) * D_s(H, n_, P_ani[i], P_r[i]) *
+            nabla_V_F_s(L, V, H, P_b_, P_m[i], P_st[i], P_s[i]) +
+        0.25F * P_c[i] *
+            Vec3{1.F, 1.F, 1.F}.odot(
+                F_r(L, H) *
+                    (D_r(H, n_, P_c[i]) * nabla_V_G_r(L, V, n_) +
+                     G_r(L, V, n_) * nabla_V_D_r(L, V, H, P_cg[i], n_)) +
+                G_r(L, V, n_) * D_r(H, n_, P_cg[i]) * nabla_V_F_r(L, V, H));
+    result[9 * i + 0] = nabla_V_BRDF.m[0];
+    result[9 * i + 1] = nabla_V_BRDF.m[1];
+    result[9 * i + 2] = nabla_V_BRDF.m[2];
+    result[9 * i + 3] = nabla_V_BRDF.m[3];
+    result[9 * i + 4] = nabla_V_BRDF.m[4];
+    result[9 * i + 5] = nabla_V_BRDF.m[5];
+    result[9 * i + 6] = nabla_V_BRDF.m[6];
+    result[9 * i + 7] = nabla_V_BRDF.m[7];
+    result[9 * i + 8] = nabla_V_BRDF.m[8];
   }
 }
