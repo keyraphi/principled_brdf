@@ -26,50 +26,54 @@ void *cuda_allocate(size_t size) {
 
 // CUDA memory deallocation
 void cuda_free(void *ptr) {
-  if (ptr) {
+  if (ptr != nullptr) {
     cudaFree(ptr);
   }
 }
 
 ScalarArrayCUDA broadcast_scalar(const FlexScalarCUDA &source, size_t N,
                                  float default_value) {
-  if (source.shape(0) == N) {
-    return ScalarArrayCUDA(source);
-  }
-  if (source.shape(0) == 1) {
-    // copy default value to host for simple thrust::fill
-    cudaError_t err = cudaMemcpy(&default_value, source.data(), sizeof(float),
-                                 cudaMemcpyDeviceToHost);
-    if (err != cudaSuccess) {
-      throw ::std::runtime_error("Couldn't load source value from device");
+  if (source.ndim() > 0) {
+    if (source.shape(0) == N) {
+      return {source};
+    }
+    if (source.shape(0) == 1) {
+      // copy default value to host for simple thrust::fill
+      cudaError_t err = cudaMemcpy(&default_value, source.data(), sizeof(float),
+                                   cudaMemcpyDeviceToHost);
+      if (err != cudaSuccess) {
+        throw ::std::runtime_error("Couldn't load source value from device");
+      }
     }
   }
-  float *data = static_cast<float *>(cuda_allocate(N * sizeof(float)));
+  auto *data = static_cast<float *>(cuda_allocate(N * sizeof(float)));
   thrust::device_ptr<float> data_ptr(data);
   thrust::fill(data_ptr, data_ptr + N, default_value);
-  nb::capsule owner(data, [](void *p) noexcept { cuda_free(p); });
+  nb::capsule owner(data, [](void *p) noexcept -> void { cuda_free(p); });
   return ScalarArrayCUDA(data, {N}, owner);
 }
 
 Vec3ArrayCUDA broadcast_vec3(const FlexVec3CUDA &source, size_t N,
                              float default_x, float default_y,
                              float default_z) {
-  if (source.shape(0) == N) {
-    return Vec3ArrayCUDA{source};
-  }
   float3 default_value{default_x, default_y, default_z};
-  if (source.shape(0) == 1) {
-    cudaError_t err = cudaMemcpy(&default_value, source.data(), sizeof(float3),
-                                 cudaMemcpyDeviceToHost);
-    if (err != cudaSuccess) {
-      throw ::std::runtime_error("Couldn't load source value from device");
+  if (source.ndim() > 0) {
+    if (source.shape(0) == N) {
+      return Vec3ArrayCUDA{source};
+    }
+    if (source.shape(0) == 1) {
+      cudaError_t err = cudaMemcpy(&default_value, source.data(),
+                                   sizeof(float3), cudaMemcpyDeviceToHost);
+      if (err != cudaSuccess) {
+        throw ::std::runtime_error("Couldn't load source value from device");
+      }
     }
   }
-  float3 *data3 = static_cast<float3 *>(cuda_allocate(N * sizeof(float3)));
+  auto *data3 = static_cast<float3 *>(cuda_allocate(N * sizeof(float3)));
   thrust::device_ptr<float3> data_ptr(data3);
   thrust::fill(data_ptr, data_ptr + N, default_value);
-  float *data = reinterpret_cast<float *>(data3);
-  nb::capsule owner(data, [](void *p) noexcept { cuda_free(p); });
+  auto *data = reinterpret_cast<float *>(data3);
+  nb::capsule owner(data, [](void *p) noexcept -> void { cuda_free(p); });
   return Vec3ArrayCUDA(data, {N, 3}, owner);
 }
 
@@ -87,20 +91,20 @@ auto get_cuda_device_from_ndarray(const void *data_ptr) -> int {
 }
 
 // Overload for multiple arrays - picks the first valid one
-auto get_commond_cuda_device(const Vec3ArrayCUDA &omega_i,
-                             const Vec3ArrayCUDA &omega_o,
+auto get_common_cuda_device(const Vec3ArrayCUDA &omega_i,
+                            const Vec3ArrayCUDA &omega_o,
                             const ::std::optional<FlexVec3CUDA> &P_b,
-                             const ::std::optional<FlexScalarCUDA> &P_m,
-                             const ::std::optional<FlexScalarCUDA> &P_ss,
-                             const ::std::optional<FlexScalarCUDA> &P_s,
-                             const ::std::optional<FlexScalarCUDA> &P_r,
-                             const ::std::optional<FlexScalarCUDA> &P_st,
-                             const ::std::optional<FlexScalarCUDA> &P_ani,
-                             const ::std::optional<FlexScalarCUDA> &P_sh,
-                             const ::std::optional<FlexScalarCUDA> &P_sht,
-                             const ::std::optional<FlexScalarCUDA> &P_c,
-                             const ::std::optional<FlexScalarCUDA> &P_cg,
-                             const ::std::optional<FlexVec3CUDA> &n) -> int {
+                            const ::std::optional<FlexScalarCUDA> &P_m,
+                            const ::std::optional<FlexScalarCUDA> &P_ss,
+                            const ::std::optional<FlexScalarCUDA> &P_s,
+                            const ::std::optional<FlexScalarCUDA> &P_r,
+                            const ::std::optional<FlexScalarCUDA> &P_st,
+                            const ::std::optional<FlexScalarCUDA> &P_ani,
+                            const ::std::optional<FlexScalarCUDA> &P_sh,
+                            const ::std::optional<FlexScalarCUDA> &P_sht,
+                            const ::std::optional<FlexScalarCUDA> &P_c,
+                            const ::std::optional<FlexScalarCUDA> &P_cg,
+                            const ::std::optional<FlexVec3CUDA> &n) -> int {
   // Check all arrays and return the first valid device
   ::std::vector<int> devices;
 

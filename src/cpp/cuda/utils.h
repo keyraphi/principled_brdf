@@ -20,7 +20,7 @@ using Vec3ArrayCUDA =
     nb::ndarray<const float, nb::shape<-1, 3>, nb::c_contig, nb::device::cuda>;
 
 // CUDA memory management functions
-void *cuda_allocate(size_t n);
+void *cuda_allocate(size_t size);
 void cuda_free(void *ptr);
 
 // make sure the given array gets the full shape. If no source is given the
