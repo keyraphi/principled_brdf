@@ -8,12 +8,12 @@ namespace cpu {
 auto broadcast_scalar(const FlexScalarCPU &source, size_t N,
                       float default_value) -> ScalarArrayCPU {
   if (source.ndim() > 0) {
-  if (source.shape(0) == N) {
-    return ScalarArrayCPU{source};
-  }
-  if (source.shape(0) == 1) {
-    default_value = source.data()[0];
-  }
+    if (source.shape(0) == N) {
+      return ScalarArrayCPU{source};
+    }
+    if (source.shape(0) == 1) {
+      default_value = source.data()[0];
+    }
   }
   auto *data = new float[N];
   std::fill(data, data + N, default_value);

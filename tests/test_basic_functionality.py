@@ -97,9 +97,9 @@ def test_gpu_operations():
     print("Testing GPU operations...")
 
     # Create test tensors on gpu
-    omega_i = torch.randn([1024, 3], device="cuda:0")
+    omega_i = torch.randn([1024, 3])
     omega_i = omega_i / torch.linalg.norm(omega_i, -1)
-    omega_o = torch.randn([1024, 3], device="cuda:0")
+    omega_o = torch.randn([1024, 3])
     omega_o = omega_o / torch.linalg.norm(omega_o, -1)
 
     return run_test(omega_i, omega_o)
